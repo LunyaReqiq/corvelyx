@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // CONTROL CENTER  v2.9
+--  CORVELYX // CONTROL CENTER  v3.0
 --
 --  Aufbau:
 --   - Advanced Computer mit Ender Modem
@@ -15,6 +15,7 @@
 -- =====================================================
 
 local CFG = {
+  LILA          = 0x9D4EDD,  -- Akzentfarbe (Titel, Knoepfe, Balken)
   -- Funknetz: MUSS auf allen eigenen PCs genau gleich lauten!
   NETZ          = "Hier-Netzname-Eintragen",
   PASSWORT      = "Hier-Netzpasswort-Eintragen",
@@ -162,7 +163,7 @@ local function palette(t)
   t.setPaletteColour(colors.gray,      0x1A212C)
   t.setPaletteColour(colors.lightGray, 0x8592A6)
   t.setPaletteColour(colors.white,     0xE6EDF3)
-  t.setPaletteColour(colors.cyan,      0x38C9D3)
+  t.setPaletteColour(colors.cyan,      CFG.LILA)   -- Akzentfarbe (Lila)
   t.setPaletteColour(colors.lime,      0x4ADE80)
   t.setPaletteColour(colors.orange,    0xF5A524)
   t.setPaletteColour(colors.red,       0xEF4444)
@@ -212,7 +213,7 @@ local startZeit    = os.clock()
 
 local SEITEN = {
   { id = "uebersicht", name = "UEBERSICHT", kurz = "HOME" },
-  { id = "energie",    name = "ENERGIE", kurz = "STROM" },
+  { id = "energie",    name = "MATRIX", kurz = "MATRIX" },
   { id = "reaktor",    name = "FISSION", kurz = "FISS." },
   { id = "xtreme",     name = "XTREME" },
   { id = "fusion",     name = "FUSION" },
@@ -465,7 +466,13 @@ local function vorhanden(id)
   if id == "wetter" then return quellen.wetter.zeit ~= nil end
   if id == "turbine" then return next(turbinen) ~= nil end
   if id == "flux" then return next(fluxSender) ~= nil end
-  if id == "lager" then return next(lagerSender) ~= nil end
+  if id == "lager" then
+    -- nur anzeigen, wenn wirklich Drawer angeschlossen sind
+    for _, e in pairs(lagerSender) do
+      if type(e.faecher) == "table" and #e.faecher > 0 then return true end
+    end
+    return false
+  end
   if id == "xtreme" then return next(xtreme) ~= nil end
   if id == "fusion" then return next(fusion) ~= nil end
   return true
@@ -703,7 +710,7 @@ function ZEICHNE.uebersicht(t, x0, y0, W, H)
 
   if vorhanden("energie") then
     local m, ms = matrixDaten()
-    local eTitel = ms.gesamt > 1 and ("ENERGIE (" .. ms.anzahl .. "/" .. ms.gesamt .. ")") or "ENERGIE"
+    local eTitel = ms.gesamt > 1 and ("MATRIX (" .. ms.anzahl .. "/" .. ms.gesamt .. ")") or "MATRIX"
     kacheln[#kacheln + 1] = { eTitel, m and ((ms.gesamt > 1 and "Gesamt " or "Matrix ") .. pz(m.anteil)) or "KEINE DATEN",
       m and farbeFuer(m.anteil, 0.25, CFG.STROM_WARN, true) or colors.lightGray, m and m.anteil, nil,
       m and ("Rein: " .. kurz(m.rein, " FE/t")), m and ("Raus: " .. kurz(m.raus, " FE/t")), "energie" }

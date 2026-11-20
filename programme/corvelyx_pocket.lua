@@ -10,6 +10,7 @@
 -- =====================================================
 
 local CFG = {
+  LILA          = 0x9D4EDD,  -- Akzentfarbe
   -- Funknetz: alle eigenen Computer brauchen GLEICHEN Namen + Passwort
   NETZ          = "Hier-Netzname-Eintragen",
   PASSWORT      = "Hier-Netzpasswort-Eintragen",
@@ -141,7 +142,7 @@ win.setPaletteColour(colors.black,     0x0B0F14)
 win.setPaletteColour(colors.gray,      0x1A212C)
 win.setPaletteColour(colors.lightGray, 0x8592A6)
 win.setPaletteColour(colors.white,     0xE6EDF3)
-win.setPaletteColour(colors.cyan,      0x38C9D3)
+win.setPaletteColour(colors.cyan,      CFG.LILA)   -- Akzentfarbe (Lila)
 win.setPaletteColour(colors.lime,      0x4ADE80)
 win.setPaletteColour(colors.orange,    0xF5A524)
 win.setPaletteColour(colors.red,       0xEF4444)
@@ -152,7 +153,7 @@ win.setPaletteColour(colors.brown,     0x7F1D1D)
 local quellen = { reaktor = {}, me = {}, wetter = {} }
 local turbinen, flux, lager, xtreme, fusion, matrizen = {}, {}, {}, {}, {}, {}
 local matrixSeite = 0   -- 0 = Gesamt, sonst Nummer der Matrix
-local SEITEN = { "UEBERSICHT", "FISSION", "ENERGIE", "TURBINEN", "ME-SYSTEM", "WETTER", "FLUX", "LAGER", "XTREME", "FUSION" }
+local SEITEN = { "UEBERSICHT", "FISSION", "MATRIX", "TURBINEN", "ME-SYSTEM", "WETTER", "FLUX", "LAGER", "XTREME", "FUSION" }
 local seite = 1
 local knoepfe = {}
 local alarme = {}
@@ -454,7 +455,12 @@ local function vorhanden(i)
   if i == 5 then return quellen.me.zeit ~= nil end
   if i == 6 then return quellen.wetter.zeit ~= nil end
   if i == 7 then return next(flux) ~= nil end
-  if i == 8 then return next(lager) ~= nil end
+  if i == 8 then
+    for _, e in pairs(lager) do
+      if type(e.faecher) == "table" and #e.faecher > 0 then return true end
+    end
+    return false
+  end
   if i == 9 then return next(xtreme) ~= nil end
   if i == 10 then return next(fusion) ~= nil end
   return true

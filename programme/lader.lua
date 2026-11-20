@@ -9,10 +9,11 @@
 --  Ersteinrichtung: Datei auf den Computer ziehen und
 --  "lader" eintippen.
 -- =====================================================
-local LADER_VERSION = "1"
+local LADER_VERSION = "2"
 local CFG_DATEI  = "corvelyx.cfg"
 local ORDNER     = "corvelyx"
 local UPDATE_SERVER = "update_server.lua"
+local LILA = 0x9D4EDD   -- Corvelyx-Akzentfarbe (ersetzt Blau/Cyan auf dem Bildschirm)
 
 -- Programme: Datei, Erkennung im Kopf der alten Datei, Beschreibung
 local PROGRAMME = {
@@ -339,6 +340,10 @@ local function einrichten()
 end
 
 -- ---------- Start ----------
+if term.isColor() then
+  term.setPaletteColour(colors.cyan, LILA)
+  term.setPaletteColour(colors.lightBlue, LILA)
+end
 local cfg = cfgLaden()
 if not cfg or not cfg.PROGRAMM then einrichten() return end
 CFG = cfg
