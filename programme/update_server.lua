@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // UPDATE-SERVER  v1
+--  CORVELYX // UPDATE-SERVER  v1.1
 --  Holt die Programme aus deinem privaten GitHub-Repo und
 --  verteilt sie ueber das Funknetz an alle Corvelyx-
 --  Computer. Nur DIESER Computer kennt den GitHub-Token.
@@ -294,14 +294,7 @@ local function anfrage(id, a)
   end
 end
 
--- ---------- Hauptschleife ----------
-log("Gestartet", colors.lightGray)
-zeigen()
-pruefen()
-zeigen()
-statusSenden()
-local pruefTimer = os.startTimer(CFG.PRUEF_INTERVALL)
-local statusTimer = os.startTimer(CFG.STATUS_INTERVALL)
+-- Kompletten Stand senden (regelmaessig, beim Start und bei UPDATE):
 -- Regelmaessig den kompletten Stand senden: wer ein Update verpasst hat
 -- (war aus, Chunk nicht geladen ...), holt es so automatisch nach.
 local function standSenden()
@@ -309,6 +302,16 @@ local function standSenden()
   for n, e in pairs(index) do alle[n] = e.hash end
   rednet.broadcast(signieren({ typ = "neustart", dateien = alle, stand = true }), CFG.PROT_UPDATE)
 end
+
+-- ---------- Hauptschleife ----------
+log("Gestartet", colors.lightGray)
+zeigen()
+pruefen()
+zeigen()
+statusSenden()
+standSenden()
+local pruefTimer = os.startTimer(CFG.PRUEF_INTERVALL)
+local statusTimer = os.startTimer(CFG.STATUS_INTERVALL)
 local standTimer = os.startTimer(CFG.STAND_INTERVALL)
 local letztePruefung = os.clock()
 while true do
@@ -327,9 +330,11 @@ while true do
     if a and anfrage(ev[2], a) and os.clock() - letztePruefung > 20 then
       pruefen() letztePruefung = os.clock()
       statusSenden()
+      standSenden()
     end
   elseif ev[1] == "key" and ev[2] == keys.u then
     pruefen() letztePruefung = os.clock()
+    standSenden()
   end
   zeigen()
 end
