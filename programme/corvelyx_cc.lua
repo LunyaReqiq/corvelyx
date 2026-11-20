@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // CONTROL CENTER  v3.0
+--  CORVELYX // CONTROL CENTER  v3.1
 --
 --  Aufbau:
 --   - Advanced Computer mit Ender Modem
@@ -298,26 +298,78 @@ local function rechts(t, xEnde, y, s, fg, bg)
   schreib(t, xEnde - #s + 1, y, s, fg, bg)
 end
 
-local function balken(t, x, y, w, anteil, farbe)
+-- ---------- Abgerundete Formen (Pixelzeichen, 2x3 Punkte pro Zelle) ----------
+local HEX = "0123456789abcdef"
+local function zuBlit(c)
+  local n = 0
+  while c > 1 do c = c / 2 n = n + 1 end
+  return HEX:sub(n + 1, n + 1)
+end
+-- Hintergrundfarbe, die gerade an (x, y) steht
+local function hinter(t, x, y)
+  if not t.win.getLine then return colors.black end
+  local ok, _, _, bg = pcall(t.win.getLine, y)
+  if not ok or type(bg) ~= "string" then return colors.black end
+  local n = HEX:find(bg:sub(x, x), 1, true)
+  return n and 2 ^ (n - 1) or colors.black
+end
+-- Ein Pixelzeichen: p = { oben-l, oben-r, mitte-l, mitte-r, unten-l, unten-r }
+-- true = Farbe a, false = Farbe b
+local function pix(t, x, y, p, a, b)
+  local n, fg, bg = 0, a, b
+  if p[6] then
+    fg, bg = b, a
+    for i = 1, 5 do if not p[i] then n = n + 2 ^ (i - 1) end end
+  else
+    for i = 1, 5 do if p[i] then n = n + 2 ^ (i - 1) end end
+  end
+  t.win.setCursorPos(x, y)
+  t.win.blit(string.char(128 + n), zuBlit(fg), zuBlit(bg))
+end
+local ECKE = {
+  ol = { false, true, true, true, true, true }, orr = { true, false, true, true, true, true },
+  ul = { true, true, true, true, false, true }, ur = { true, true, true, true, true, false },
+}
+local function ecken(t, x, y, w, h, farbe, aussen)
+  if w < 2 or aussen == farbe then return end
+  if h == 1 then return end   -- einzeilig: eckig lassen (sonst "Nasen")
+  pix(t, x, y, ECKE.ol, farbe, aussen)
+  pix(t, x + w - 1, y, ECKE.orr, farbe, aussen)
+  pix(t, x, y + h - 1, ECKE.ul, farbe, aussen)
+  pix(t, x + w - 1, y + h - 1, ECKE.ur, farbe, aussen)
+end
+
+-- Schlanker Balken (2/3 Zellenhoehe), optional mehrere Zeilen dick
+local function balken(t, x, y, w, anteil, farbe, hoehe)
   if w <= 0 then return end
+  hoehe = hoehe or 1
+  local aussen = hinter(t, x, y)
   anteil = math.max(0, math.min(1, anteil or 0))
   local voll = math.floor(w * anteil + 0.5)
-  t.win.setCursorPos(x, y)
-  t.win.setBackgroundColor(farbe)
-  t.win.write(string.rep(" ", voll))
-  t.win.setBackgroundColor(colors.black)
-  t.win.write(string.rep(" ", w - voll))
+  if anteil > 0 and voll == 0 then voll = 1 end
+  for i = 0, w - 1 do
+    local f = (i < voll) and farbe or colors.black
+    -- oben Hintergrund, Mitte + unten Balken
+    pix(t, x + i, y, { false, false, true, true, true, true }, f, aussen)
+  end
+  if hoehe > 1 then fuell(t, x, y + 1, voll, hoehe - 1, farbe) fuell(t, x + voll, y + 1, w - voll, hoehe - 1, colors.black) end
 end
 
--- Panel mit Akzentleiste links und Titel
+-- Panel: abgerundete Karte mit schmaler Akzentleiste und Titel
 local function panel(t, x, y, w, h, titel, akzent)
+  akzent = akzent or colors.cyan
+  local aussen = hinter(t, x, y)
   fuell(t, x, y, w, h, colors.gray)
-  fuell(t, x, y, 1, h, akzent or colors.cyan)
-  if titel then schreib(t, x + 2, y, titel, akzent or colors.cyan, colors.gray, w - 3) end
+  ecken(t, x, y, w, h, colors.gray, aussen)
+  for i = 1, h - 2 do pix(t, x, y + i, { true, false, true, false, true, false }, akzent, colors.gray) end
+  if titel then schreib(t, x + 2, y, titel, akzent, colors.gray, w - 3) end
 end
 
+-- Knopf: abgerundet (Pille)
 local function knopf(t, x, y, w, h, text, bg, fg, aktion)
+  local aussen = hinter(t, x, y)
   fuell(t, x, y, w, h, bg)
+  if w >= 4 then ecken(t, x, y, w, h, bg, aussen) end
   local tx = x + math.max(0, math.floor((w - #text) / 2))
   local ty = y + math.floor((h - 1) / 2)
   schreib(t, tx, ty, text, fg or colors.white, bg, w)
@@ -839,8 +891,7 @@ local function energiePanel(t, x0, y0, W, oH, m, titel, fehlerText)
   local bF = farbeFuer(m.anteil, 0.25, CFG.STROM_WARN, true)
   schreib(t, x0 + 2, y0 + 1, pz(m.anteil), bF, colors.gray)
   rechts(t, x0 + W - 2, y0 + 1, kurz(m.energie, " FE") .. " / " .. kurz(m.max, " FE"), colors.white, colors.gray)
-  balken(t, x0 + 2, y0 + 2, W - 4, m.anteil, bF)
-  if oH >= 9 then balken(t, x0 + 2, y0 + 3, W - 4, m.anteil, bF) end
+  balken(t, x0 + 2, y0 + 2, W - 4, m.anteil, bF, oH >= 9 and 2 or 1)
   local netto = (m.rein or 0) - (m.raus or 0)
   local sp = math.floor((W - 4) / 2)
   local ly = y0 + (oH >= 9 and 5 or 4)
@@ -1068,8 +1119,7 @@ local function turbinePanel(t, x0, y0, W, H, e)
   for _, z in ipairs(zeilen) do
     if y + 1 >= y0 + H then break end
     wertZeile(t, x0 + 2, y, bw, z[1], z[2], z[4])
-    balken(t, x0 + 2, y + 1, bw, z[3], z[4])
-    if gross and y + 2 < y0 + H then balken(t, x0 + 2, y + 2, bw, z[3], z[4]) end
+    balken(t, x0 + 2, y + 1, bw, z[3], z[4], (gross and y + 2 < y0 + H) and 2 or 1)
     y = y + (gross and 5 or 3)
   end
   if y < y0 + H and type(tu.puffer) == "number" and tu.puffer >= 0.95 then
@@ -1137,9 +1187,7 @@ function ZEICHNE.me(t, x0, y0, W, H)
   for _, z in ipairs(zeilen) do
     if y + 1 >= y0 + H then break end
     wertZeile(t, x0 + 2, y, bw, z[1], z[2], z[4])
-    for i = 1, dicke do
-      if y + i < y0 + H then balken(t, x0 + 2, y + i, bw, z[3], z[4]) end
-    end
+    balken(t, x0 + 2, y + 1, bw, z[3], z[4], math.max(1, math.min(dicke, y0 + H - 1 - y)))
     y = y + abstand
   end
 end
@@ -1827,38 +1875,120 @@ local function kopf(t, y)
   end
 end
 
+local VORRANG = { [colors.cyan] = 5, [colors.red] = 4, [colors.brown] = 4, [colors.orange] = 3, [colors.green] = 3, [colors.gray] = 1 }
+-- Pixel-Leinwand (2x3 Punkte pro Zelle) auf den Monitor bringen
+local function leinwandAusgeben(t, cv, W, H)
+  for cy = 1, H do
+    local ch, fg, bg = {}, {}, {}
+    for cx = 1, W do
+      local p, zaehl = {}, {}
+      for i = 1, 6 do
+        local px = (cx - 1) * 2 + 1 + (i - 1) % 2
+        local py = (cy - 1) * 3 + 1 + math.floor((i - 1) / 2)
+        local f = cv[py][px]
+        p[i] = f
+        zaehl[f] = (zaehl[f] or 0) + 1
+      end
+      local a, b
+      local anzahl = 0
+      for _ in pairs(zaehl) do anzahl = anzahl + 1 end
+      if anzahl > 2 then
+        -- Zelle mit 3+ Farben: Schwarz + wichtigste Farbe behalten
+        local best
+        for f in pairs(zaehl) do
+          if f ~= colors.black and (not best or (VORRANG[f] or 0) > (VORRANG[best] or 0)) then best = f end
+        end
+        for i = 1, 6 do if p[i] ~= best then p[i] = colors.black end end
+        zaehl = { [best] = 0, [colors.black] = 0 }
+        for i = 1, 6 do zaehl[p[i]] = zaehl[p[i]] + 1 end
+      end
+      for f, n in pairs(zaehl) do
+        if n > 0 then
+          if not a or n > zaehl[a] then b = a a = f elseif not b or n > zaehl[b] then b = f end
+        end
+      end
+      if not b then
+        ch[cx], fg[cx], bg[cx] = " ", zuBlit(a), zuBlit(a)
+      else
+        -- unten rechts muss Hintergrund sein
+        local vorne, hinten = a, b
+        if p[6] == a then vorne, hinten = b, a end
+        local n = 0
+        for i = 1, 5 do if p[i] == vorne then n = n + 2 ^ (i - 1) end end
+        ch[cx], fg[cx], bg[cx] = string.char(128 + n), zuBlit(vorne), zuBlit(hinten)
+      end
+    end
+    t.win.setCursorPos(1, cy)
+    t.win.blit(table.concat(ch), table.concat(fg), table.concat(bg))
+  end
+end
+
 local function menueMonitor(t)
   t.win.setVisible(false)
-  fuell(t, 1, 1, t.w, t.h, colors.black)
-  schreib(t, 2, 1, "CORVELYX", colors.cyan, colors.black)
-  local ay = t.h - 2                 -- Alarmfeld (3 Zeilen)
-  local platz = (ay - 2) - 3 + 1     -- Zeilen fuer Knoepfe (ab Zeile 3)
+  local W, H = t.w, t.h
+  local cv = {}
+  for py = 1, H * 3 do
+    cv[py] = {}
+    for px = 1, W * 2 do cv[py][px] = colors.black end
+  end
+  local function rechteck(px1, py1, px2, py2, f)
+    for py = math.max(1, py1), math.min(H * 3, py2) do
+      for px = math.max(1, px1), math.min(W * 2, px2) do cv[py][px] = f end
+    end
+  end
+  -- Pille: Textzeile ty, Zellen x..x+w-1, pad = 1 Punkt Rand oben/unten mit runden Ecken
+  local function pille(x, ty, w, f, pad)
+    local px1, px2 = x * 2 - 1, (x + w - 1) * 2
+    local py1, py2 = (ty - 1) * 3 + 1 - pad, ty * 3 + pad
+    rechteck(px1, py1, px2, py2, f)
+  end
+  local texte = {}
+
+  -- Kopf: Name + feine Linie
+  texte[#texte + 1] = { math.floor((W - 8) / 2) + 1, 1, "CORVELYX", colors.cyan, colors.black }
+  rechteck(3, 5, W * 2 - 2, 5, colors.gray)
+
+  -- Alarm-/Statusfeld unten (Pille)
+  local rot = #alarme > 0 and alarme[1].stufe == 2
+  local abg
+  if #alarme == 0 then abg = colors.green
+  elseif rot then abg = blink and colors.red or colors.brown
+  else abg = colors.orange end
+  local atxt = #alarme == 0 and "SYSTEM OK" or (#alarme .. (#alarme == 1 and " ALARM" or " ALARME"))
+  local aty = H - 1
+  pille(2, aty, W - 2, abg, 1)
+  texte[#texte + 1] = { 2 + math.floor((W - 2 - #atxt) / 2), aty, atxt, colors.white, abg }
+  knoepfe[#knoepfe + 1] = { name = t.name, x1 = 1, y1 = aty - 1, x2 = W, y2 = H, aktion = function() seite = "uebersicht" end }
+
+  -- Seitenknoepfe
+  local oben, unten = 3, H - 4
+  local platz = unten - oben + 1
   local seiten = sichtbareSeiten()
   local spalten = (math.floor(platz / #seiten) >= 2) and 1 or 2
   local proSpalte = math.ceil(#seiten / spalten)
   local schritt = math.max(1, math.min(4, math.floor(platz / proSpalte)))
-  local kh = schritt >= 3 and (schritt - 1) or 1
-  local sw = (spalten == 1) and (t.w - 2) or math.floor((t.w - 3) / 2)
+  local pad = schritt >= 2 and 1 or 0
+  local versatz = (schritt >= 2) and 1 or 0
+  local sw = (spalten == 1) and (W - 2) or math.floor((W - 3) / 2)
   for i, s in ipairs(seiten) do
     local sp = (spalten == 1) and 1 or (((i - 1) % 2) + 1)
     local zeileNr = (spalten == 1) and (i - 1) or math.floor((i - 1) / 2)
     local x = (sp == 1) and 2 or (3 + sw)
-    local y = 3 + zeileNr * schritt
-    if y + kh - 1 <= ay - 2 then
+    local bw = (sp == 2) and (W - 1 - x) or sw
+    local ty = oben + zeileNr * schritt + versatz
+    if ty <= unten then
       local aktiv = (s.id == seite)
-      local label = (#s.name <= sw) and s.name or (s.kurz or s.name:sub(1, sw))
-      knopf(t, x, y, (sp == 2) and (t.w - 1 - x) or sw, kh, label, aktiv and colors.cyan or colors.gray,
-        aktiv and colors.black or colors.white, function() seite = s.id end)
+      local f = aktiv and colors.cyan or colors.gray
+      local label = (#s.name <= bw) and s.name or (s.kurz or s.name:sub(1, bw))
+      pille(x, ty, bw, f, pad)
+      texte[#texte + 1] = { x + math.floor((bw - #label) / 2), ty, label, aktiv and colors.black or colors.white, f }
+      knoepfe[#knoepfe + 1] = { name = t.name, x1 = x, y1 = ty - pad, x2 = x + bw - 1, y2 = ty + pad,
+        aktion = function() seite = s.id end }
     end
   end
-  -- Alarmfeld unten
-  local rot = #alarme > 0 and alarme[1].stufe == 2
-  local bg
-  if #alarme == 0 then bg = colors.green
-  elseif rot then bg = blink and colors.red or colors.brown
-  else bg = colors.orange end
-  local txt = #alarme == 0 and "SYSTEM OK" or (#alarme .. (#alarme == 1 and " ALARM" or " ALARME"))
-  knopf(t, 2, ay, t.w - 2, 3, txt, bg, colors.white, function() seite = "uebersicht" end)
+
+  leinwandAusgeben(t, cv, W, H)
+  for _, tx in ipairs(texte) do schreib(t, tx[1], tx[2], tx[3], tx[4], tx[5]) end
   t.win.setVisible(true)
 end
 
@@ -1888,6 +2018,13 @@ local function zeichnen()
   end
   if not vorhanden(seite) then seite = "uebersicht" end
   ZEICHNE[seite](t, 2, y0, t.w - 2, t.h - y0)
+  -- Widmung im unteren Rand
+  local herz = string.char(3)
+  local widmung = "In Zusammenarbeit mit den beiden wundervollsten Menschen: Annie & Emi "
+  if #widmung + 1 > t.w - 2 then widmung = "Mit Annie & Emi " end
+  local wx = math.floor((t.w - #widmung - 1) / 2) + 1
+  schreib(t, wx, t.h, widmung, colors.lightGray, colors.black)
+  schreib(t, wx + #widmung, t.h, herz, colors.cyan, colors.black)
   t.win.setVisible(true)
   if MENU then menueMonitor(MENU) end
 end
