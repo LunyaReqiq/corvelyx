@@ -5,7 +5,7 @@ ComputerCraft-System für ATM10 (CC: Tweaked): Control Center, Reaktoren, Matriz
 ## Wie die Updates laufen
 
 ```
-GitHub (privat) ──Token──> Update-Computer ──Funknetz, signiert──> alle Corvelyx-Computer
+GitHub ──> Update-Computer ──Funknetz, signiert──> alle Corvelyx-Computer
 ```
 
 - Jeder Computer hat `lader.lua` als `startup.lua`. Beim Start fragt er den Update-Computer nach seinem Programm.
@@ -18,7 +18,7 @@ GitHub (privat) ──Token──> Update-Computer ──Funknetz, signiert─�
 | Datei | Computer |
 |---|---|
 | `lader.lua` | auf jedem Computer (wird zur `startup.lua`) |
-| `update_server.lua` | Update-Computer (einziger mit GitHub-Token) |
+| `update_server.lua` | Update-Computer (holt die Programme von GitHub) |
 | `corvelyx_cc.lua` | Control Center |
 | `corvelyx_pocket.lua` | Advanced Pocket Computer |
 | `reaktor_waechter.lua` | Fission Logic Adapter |
@@ -30,6 +30,15 @@ GitHub (privat) ──Token──> Update-Computer ──Funknetz, signiert─�
 | `corvelyx_wetter.lua` | Wetter-PC |
 | `tuer_sender.lua` | Betretungslog: Player Detector an der Tür |
 | `mobfarm.lua` | Mobfarm-Schalter: dauerhaftes Redstone-Signal zum Create Redstone Link |
+
+## Eigenes Netz einrichten (auch für Freunde)
+
+1. Einen neuen Computer mit Ender Modem als Update-Computer aufstellen.
+2. `lader.lua` in das Computerfenster ziehen, `lader` eintippen, **10** wählen.
+3. Eigenen Netznamen und eigenes Passwort eintragen. Benutzer, Repo, Branch und Ordner mit Enter übernehmen, Token leer lassen.
+4. Danach jeden weiteren Computer wie unten einrichten.
+
+Jedes Netz ist durch sein eigenes Passwort von den anderen getrennt.
 
 ## Einrichtung eines Computers
 
