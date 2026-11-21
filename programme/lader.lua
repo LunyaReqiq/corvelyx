@@ -7,10 +7,12 @@
 --
 --  Einstellungen stehen in "corvelyx.cfg" (nicht hier!).
 --  Ersteinrichtung: Datei auf den Computer ziehen und
---  "lader" eintippen.
+--  "lader" eintippen - oder direkt im Spiel:
+--  wget run https://raw.githubusercontent.com/LunyaReqiq/corvelyx/main/programme/lader.lua
 -- =====================================================
-local LADER_VERSION = "4"
+local LADER_VERSION = "5"
 local CFG_DATEI  = "corvelyx.cfg"
+local LADER_URL  = "https://raw.githubusercontent.com/LunyaReqiq/corvelyx/main/programme/lader.lua"
 local ORDNER     = "corvelyx"
 local UPDATE_SERVER = "update_server.lua"
 local LILA = 0x9D4EDD   -- Corvelyx-Akzentfarbe (ersetzt Blau/Cyan auf dem Bildschirm)
@@ -352,7 +354,18 @@ local function einrichten()
   end
   cfgSpeichern(cfg)
   local ich = lesen(selbst)
-  if ich and selbst ~= "startup.lua" then schreiben("startup.lua", ich) end
+  if not (ich and ich:find("CORVELYX // LADER", 1, true)) then
+    -- Gestartet per "wget run ..." -> Lader direkt von GitHub holen
+    local r = http.get(LADER_URL, nil, true)
+    if r then ich = r.readAll() r.close() end
+  end
+  if ich and ich:find("CORVELYX // LADER", 1, true) and selbst ~= "startup.lua" then
+    schreiben("startup.lua", ich)
+  end
+  if not fs.exists("startup.lua") then
+    meldung("Konnte den Lader nicht speichern.", colors.red)
+    return
+  end
   print("")
   meldung("Fertig! Neustart ...", colors.lime)
   sleep(2)

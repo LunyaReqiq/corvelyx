@@ -58,8 +58,12 @@ Jeder Computer braucht eine **eigene ID**. Nimm frisch gecraftete Computer und k
 ### 1. Update-Computer (einmal pro Netz)
 
 1. Neuen Computer mit Ender Modem aufstellen, am besten in einem geclaimten und gechunkloadeten Chunk.
-2. [`programme/lader.lua`](programme/lader.lua) herunterladen und ins Computerfenster ziehen.
-3. `lader` eintippen und **10** (Update-Computer) wählen.
+2. Im Computer diesen einen Befehl eintippen:
+   ```
+   wget run https://raw.githubusercontent.com/LunyaReqiq/corvelyx/main/programme/lader.lua
+   ```
+   (Alternativ [`programme/lader.lua`](programme/lader.lua) herunterladen, ins Computerfenster ziehen und `lader` eintippen.)
+3. **10** (Update-Computer) wählen.
 4. Einen **eigenen Netznamen und ein eigenes Passwort** ausdenken und eintragen. Benutzer, Repo, Branch und Ordner mit Enter übernehmen, den Token leer lassen.
 
 Auf dem Bildschirm sollte danach „OK – … Programme“ stehen.
@@ -67,7 +71,7 @@ Auf dem Bildschirm sollte danach „OK – … Programme“ stehen.
 ### 2. Alle anderen Computer
 
 1. Computer mit Ender Modem an die Anlage stellen.
-2. `lader.lua` ins Fenster ziehen, `lader` eintippen.
+2. Den gleichen `wget run …`-Befehl eintippen (oder `lader.lua` ins Fenster ziehen und `lader` eintippen).
 3. Programm auswählen und Netz und Passwort eintragen, genau wie beim Update-Computer.
 
 Läuft auf dem Computer schon ein altes Corvelyx-Programm, erkennt der Lader es und übernimmt die Einstellungen. Die Sicherung landet in `startup_alt.lua`.
