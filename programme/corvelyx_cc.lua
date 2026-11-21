@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // CONTROL CENTER  v3.5
+--  CORVELYX // CONTROL CENTER  v3.6
 --
 --  Aufbau:
 --   - Advanced Computer mit Ender Modem
@@ -2058,6 +2058,38 @@ function ZEICHNE.mobfarm(t, x0, y0, W, H)
 end
 
 -- ---------- Rahmen: Kopfzeile, Menue ----------
+-- ---------- Echte Uhrzeit (Berlin, MEZ/MESZ) ----------
+local function zivilTag(tage)
+  local z = tage + 719468
+  local era = math.floor(z / 146097)
+  local doe = z - era * 146097
+  local yoe = math.floor((doe - math.floor(doe / 1460) + math.floor(doe / 36524) - math.floor(doe / 146096)) / 365)
+  local y = yoe + era * 400
+  local doy = doe - (365 * yoe + math.floor(yoe / 4) - math.floor(yoe / 100))
+  local mp = math.floor((5 * doy + 2) / 153)
+  local m = mp < 10 and mp + 3 or mp - 9
+  if m <= 2 then y = y + 1 end
+  return y
+end
+local function tageVon(y, m, d)
+  if m <= 2 then y = y - 1 end
+  local era = math.floor(y / 400)
+  local yoe = y - era * 400
+  local mp = m > 2 and m - 3 or m + 9
+  local doy = math.floor((153 * mp + 2) / 5) + d - 1
+  return era * 146097 + yoe * 365 + math.floor(yoe / 4) - math.floor(yoe / 100) + doy - 719468
+end
+local function letzterSonntag(y, m) local t = tageVon(y, m, 31) return t - (t + 4) % 7 end
+local function berlinUhr()
+  local sek = math.floor(os.epoch("utc") / 1000)
+  local y = zivilTag(math.floor(sek / 86400))
+  local start = letzterSonntag(y, 3) * 86400 + 3600
+  local ende  = letzterSonntag(y, 10) * 86400 + 3600
+  local lokal = sek + ((sek >= start and sek < ende) and 7200 or 3600)
+  local rest = lokal % 86400
+  return string.format("%02d:%02d", math.floor(rest / 3600), math.floor(rest % 3600 / 60))
+end
+
 local function kopf(t, y)
   fuell(t, 1, y, t.w, 1, colors.gray)
   schreib(t, 2, y, "CORVELYX", colors.cyan, colors.gray)
@@ -2066,7 +2098,7 @@ local function kopf(t, y)
   for _, s in ipairs(SEITEN) do if s.id == seite then name = s.name end end
   local w = wetterDaten()
   local zeit = textutils.formatTime(w and w.uhr or os.time(), true)
-  local rechtsText = name .. "  |  " .. zeit
+  local rechtsText = name .. "  |  IG: " .. zeit .. " | RL: " .. berlinUhr()
   rechts(t, t.w - 1, y, rechtsText, colors.white, colors.gray)
   if w then
     local wt, wf = wetterText(w)

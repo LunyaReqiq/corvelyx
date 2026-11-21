@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // POCKET  v1.8
+--  CORVELYX // POCKET  v1.9
 --  Das Control Center fuer die Hosentasche.
 --  Laeuft auf einem ADVANCED POCKET COMPUTER mit
 --  ENDER MODEM (beides in der Werkbank kombinieren).
@@ -1006,6 +1006,38 @@ SEITE[13] = function()   -- Updates
   end)
 end
 
+-- ---------- Echte Uhrzeit (Berlin, MEZ/MESZ) ----------
+local function zivilTag(tage)
+  local z = tage + 719468
+  local era = math.floor(z / 146097)
+  local doe = z - era * 146097
+  local yoe = math.floor((doe - math.floor(doe / 1460) + math.floor(doe / 36524) - math.floor(doe / 146096)) / 365)
+  local y = yoe + era * 400
+  local doy = doe - (365 * yoe + math.floor(yoe / 4) - math.floor(yoe / 100))
+  local mp = math.floor((5 * doy + 2) / 153)
+  local m = mp < 10 and mp + 3 or mp - 9
+  if m <= 2 then y = y + 1 end
+  return y
+end
+local function tageVon(y, m, d)
+  if m <= 2 then y = y - 1 end
+  local era = math.floor(y / 400)
+  local yoe = y - era * 400
+  local mp = m > 2 and m - 3 or m + 9
+  local doy = math.floor((153 * mp + 2) / 5) + d - 1
+  return era * 146097 + yoe * 365 + math.floor(yoe / 4) - math.floor(yoe / 100) + doy - 719468
+end
+local function letzterSonntag(y, m) local t = tageVon(y, m, 31) return t - (t + 4) % 7 end
+local function berlinUhr()
+  local sek = math.floor(os.epoch("utc") / 1000)
+  local y = zivilTag(math.floor(sek / 86400))
+  local start = letzterSonntag(y, 3) * 86400 + 3600
+  local ende  = letzterSonntag(y, 10) * 86400 + 3600
+  local lokal = sek + ((sek >= start and sek < ende) and 7200 or 3600)
+  local rest = lokal % 86400
+  return string.format("%02d:%02d", math.floor(rest / 3600), math.floor(rest % 3600 / 60))
+end
+
 -- ---------- Rahmen ----------
 local function zeichnen()
   knoepfe = {}
@@ -1013,9 +1045,10 @@ local function zeichnen()
   fuell(1, 1, W, H, colors.black)
   -- Kopf
   fuell(1, 1, W, 1, colors.gray)
-  schreib(2, 1, "CORVELYX", colors.cyan, colors.gray)
   local w = daten("wetter")
-  rechts(W - 1, 1, textutils.formatTime(w and w.uhr or os.time(), true), colors.white, colors.gray)
+  local uhr = "IG: " .. textutils.formatTime(w and w.uhr or os.time(), true) .. " | RL: " .. berlinUhr()
+  if #uhr + 10 <= W then schreib(2, 1, "CORVELYX", colors.cyan, colors.gray) end
+  rechts(W - 1, 1, uhr, colors.white, colors.gray)
   -- Seitenwahl
   if not vorhanden(seite) then seite = 1 end
   knopf(1, 2, 3, 1, "<", colors.black, colors.cyan, function() blaettern(-1) end)
