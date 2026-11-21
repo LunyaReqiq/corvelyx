@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // LASER-ZUENDER  v1.1
+--  CORVELYX // LASER-ZUENDER  v1.2
 --  Zuendet einen Mekanism-Fusionsreaktor: gibt dem Laser
 --  Amplifier ein Redstone-Signal, bis der zugehoerige
 --  Reaktor "gezuendet" meldet, und schaltet es dann ab.
@@ -22,6 +22,36 @@ local CFG = {
 }
 -- Einstellungen aus corvelyx.cfg (Update-System) uebernehmen
 if type(CORVELYX_CFG) == "table" then for k, v in pairs(CORVELYX_CFG) do CFG[k] = v end end
+-- Sprache (de/en) - wird vom Update-Computer fuers ganze Netz vorgegeben
+local EN = {
+  ["   Auto-Z\252ndung: "] = "   Auto ignition: ",
+  ["  (Seite "] = "  (side ",
+  [" gez\252ndet"] = " ignited",
+  [" s (Hohlraum leer?)"] = " s (hohlraum empty?)",
+  ["AN"] = "ON",
+  ["AUS"] = "OFF",
+  ["Auto-Z\252ndung"] = "Auto ignition",
+  ["FEHLT"] = "MISSING",
+  ["Kein Ender Modem gefunden!"] = "No Ender Modem found!",
+  ["Kein Hohlraum im Reaktor"] = "No hohlraum in the reactor",
+  ["Kein Laser Amplifier am Computer gefunden!"] = "No Laser Amplifier at the computer!",
+  ["Keine Z\252ndung nach "] = "No ignition after ",
+  ["Ladung: %.2f G / %.2f G FE"] = "Charge: %.2f G / %.2f G FE",
+  ["Laser Amplifier muss DIREKT am Computer sitzen (nicht per Kabel)"] = "The Laser Amplifier must touch the computer DIRECTLY (no cable)",
+  ["Laser noch nicht voll genug"] = "Laser not charged enough yet",
+  ["Reaktor ist schon gez\252ndet"] = "Reactor is already ignited",
+  ["Reaktor: "] = "Reactor: ",
+  ["Signal AN"] = "Signal ON",
+  ["Signal aus"] = "Signal off",
+  ["Unbekannter Befehl"] = "Unknown command",
+  ["Z\252ndung gestartet"] = "Ignition started",
+  ["Zeitlimit"] = "Time limit",
+  ["Zugriff verweigert"] = "Access denied",
+  ["abgebrochen"] = "cancelled",
+  ["gez\252ndet"] = "ignited",
+  ["keine Daten"] = "no data",
+}
+local function L(s) if CFG.SPRACHE == "en" then return EN[s] or s end return s end
 CFG.PROTOKOLL   = CFG.NETZ .. "/daten"
 CFG.PROT_STEUER = CFG.NETZ .. "/steuer"
 if not CFG.FUSION then
@@ -122,13 +152,13 @@ end
 
 -- ---------- Geraete ----------
 local modem = peripheral.find("modem", function(_, m) return m.isWireless() end)
-if not modem then error("Kein Ender Modem gefunden!", 0) end
+if not modem then error(L("Kein Ender Modem gefunden!"), 0) end
 rednet.open(peripheral.getName(modem))
 local amp = peripheral.find("laserAmplifier")
-if not amp then error("Kein Laser Amplifier am Computer gefunden!", 0) end
+if not amp then error(L("Kein Laser Amplifier am Computer gefunden!"), 0) end
 local SEITE = peripheral.getName(amp)
 local SEITEN = { top = true, bottom = true, left = true, right = true, front = true, back = true }
-if not SEITEN[SEITE] then error("Laser Amplifier muss DIREKT am Computer sitzen (nicht per Kabel)", 0) end
+if not SEITEN[SEITE] then error(L("Laser Amplifier muss DIREKT am Computer sitzen (nicht per Kabel)"), 0) end
 
 local function inFE(j)
   if type(j) ~= "number" then return nil end
@@ -166,7 +196,7 @@ local function setzeSignal(an, grund)
   signal = an
   signalSeit = an and os.clock() or nil
   rs.setOutput(SEITE, an)
-  notiz((an and "Signal AN" or "Signal aus") .. (grund and (" - " .. grund) or ""))
+  notiz((an and L("Signal AN") or L("Signal aus")) .. (grund and (" - " .. grund) or ""))
 end
 rs.setOutput(SEITE, false)   -- nach Neustart immer aus
 
@@ -190,9 +220,9 @@ local function fusionFrisch() return fusion.zeit and (os.clock() - fusion.zeit) 
 -- Darf gezuendet werden? (nil oder Grund)
 local function hindernis()
   local e = energie()
-  if fusionFrisch() and fusion.gezuendet then return "Reaktor ist schon gez\252ndet" end
-  if fusionFrisch() and fusion.hohlraum == false then return "Kein Hohlraum im Reaktor" end
-  if not e or e < ziel() then return "Laser noch nicht voll genug" end
+  if fusionFrisch() and fusion.gezuendet then return L("Reaktor ist schon gez\252ndet") end
+  if fusionFrisch() and fusion.hohlraum == false then return L("Kein Hohlraum im Reaktor") end
+  if not e or e < ziel() then return L("Laser noch nicht voll genug") end
   return nil
 end
 
@@ -201,7 +231,7 @@ local function zuenden(wer)
   if h then return false, h end
   fehler = nil
   setzeSignal(true, wer)
-  return true, "Z\252ndung gestartet"
+  return true, L("Z\252ndung gestartet")
 end
 
 -- ---------- Fernbefehle ----------
@@ -236,15 +266,15 @@ local function zeigen()
   term.clear()
   local function z(y, text, f) term.setCursorPos(1, y) term.setTextColor(f or colors.white) term.write(text:sub(1, w)) end
   z(1, "CORVELYX // LASER-Z\220NDER", colors.cyan)
-  z(2, CFG.NAME .. " -> " .. CFG.FUSION .. "  (Seite " .. SEITE .. ")", colors.lightGray)
+  z(2, CFG.NAME .. " -> " .. CFG.FUSION .. L("  (Seite ") .. SEITE .. ")", colors.lightGray)
   local e = energie()
-  z(4, string.format("Ladung: %.2f G / %.2f G FE", (e or 0) / 1e9, ziel() / 1e9), (e or 0) >= ziel() and colors.lime or colors.orange)
-  z(5, "Reaktor: " .. (not fusionFrisch() and "keine Daten" or (fusion.gezuendet and "gez\252ndet" or "aus")),
+  z(4, string.format(L("Ladung: %.2f G / %.2f G FE"), (e or 0) / 1e9, ziel() / 1e9), (e or 0) >= ziel() and colors.lime or colors.orange)
+  z(5, L("Reaktor: ") .. (not fusionFrisch() and L("keine Daten") or (fusion.gezuendet and L("gez\252ndet") or (L("AUS")):lower())),
     fusion.gezuendet and colors.lime or colors.lightGray)
   if fusionFrisch() and fusion.hohlraum ~= nil then
-    z(6, "Hohlraum: " .. (fusion.hohlraum and "eingelegt" or "FEHLT"), fusion.hohlraum and colors.lime or colors.red)
+    z(6, L("Hohlraum: ") .. (fusion.hohlraum and "eingelegt" or L("FEHLT")), fusion.hohlraum and colors.lime or colors.red)
   end
-  z(7, "Signal: " .. (signal and "AN" or "aus") .. "   Auto-Z\252ndung: " .. (zustand.auto and "AN" or "aus"),
+  z(7, L("Signal: ") .. (signal and L("AN") or (L("AUS")):lower()) .. L("   Auto-Z\252ndung: ") .. (zustand.auto and L("AN") or (L("AUS")):lower()),
     signal and colors.orange or colors.white)
   if fehler then z(8, fehler, colors.red) end
   for i, l in ipairs(log) do if 9 + i <= h then z(9 + i, l, colors.gray) end end
@@ -272,14 +302,14 @@ while true do
     -- Signal beenden: gezuendet oder Zeitlimit
     if signal then
       if fusionFrisch() and fusion.gezuendet then
-        setzeSignal(false, CFG.FUSION .. " gez\252ndet")
+        setzeSignal(false, CFG.FUSION .. L(" gez\252ndet"))
       elseif os.clock() - signalSeit > CFG.ZEITLIMIT then
-        setzeSignal(false, "Zeitlimit")
-        fehler = "Keine Z\252ndung nach " .. CFG.ZEITLIMIT .. " s (Hohlraum leer?)"
+        setzeSignal(false, L("Zeitlimit"))
+        fehler = L("Keine Z\252ndung nach ") .. CFG.ZEITLIMIT .. L(" s (Hohlraum leer?)")
         fehlerBis = os.clock() + CFG.PAUSE_AUTO
       end
     elseif zustand.auto and fusionFrisch() and fusion.gezuendet == false and os.clock() > fehlerBis then
-      local ok = zuenden("Auto-Z\252ndung")
+      local ok = zuenden(L("Auto-Z\252ndung"))
     end
     rs.setOutput(SEITE, signal)
     if os.clock() >= naechstesSenden then senden() naechstesSenden = os.clock() + CFG.SENDEN end
@@ -299,13 +329,13 @@ while true do
       local ok = nonceEinloesen(msg.nonce)
         and msg.sig == sha256(CFG.PASSWORT .. "|" .. msg.befehl .. "|" .. msg.wert .. "|" .. msg.nonce)
       local text
-      if not ok then text = "Zugriff verweigert"
-      elseif msg.befehl == "zuenden" then ok, text = zuenden("Control Center")
-      elseif msg.befehl == "abbrechen" then setzeSignal(false, "abgebrochen") text = "Signal aus"
+      if not ok then text = L("Zugriff verweigert")
+      elseif msg.befehl == "zuenden" then ok, text = zuenden(L("Control Center"))
+      elseif msg.befehl == "abbrechen" then setzeSignal(false, L("abgebrochen")) text = L("Signal aus")
       elseif msg.befehl == "auto" then
         zustand.auto = msg.wert == "1" speichern()
-        text = "Auto-Z\252ndung " .. (zustand.auto and "AN" or "aus")
-      else ok, text = false, "Unbekannter Befehl" end
+        text = "Auto-Z\252ndung " .. (zustand.auto and L("AN") or (L("AUS")):lower())
+      else ok, text = false, L("Unbekannter Befehl") end
       rednet.send(id, signieren({ typ = "antwort", ok = ok, text = CFG.NAME .. ": " .. text }), CFG.PROT_STEUER)
       senden()
       zeigen()

@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // TUER-SENDER  v1.1
+--  CORVELYX // TUER-SENDER  v1.2
 --  Betretungslog: Ein Player Detector an der Tuer erkennt,
 --  wer hindurchgeht. Spieler, die NICHT im Team sind,
 --  werden mit Datum und deutscher Uhrzeit protokolliert
@@ -23,6 +23,18 @@ local CFG = {
 }
 -- Einstellungen aus corvelyx.cfg (Update-System) uebernehmen
 if type(CORVELYX_CFG) == "table" then for k, v in pairs(CORVELYX_CFG) do CFG[k] = v end end
+-- Sprache (de/en) - wird vom Update-Computer fuers ganze Netz vorgegeben
+local EN = {
+  ["  -  heute: "] = "  -  today: ",
+  ["  gesamt: "] = "  total: ",
+  ["Haust\252r"] = "Front door",
+  ["Kein Ender Modem gefunden!"] = "No Ender Modem found!",
+  ["Kein Player Detector gefunden!"] = "No Player Detector found!",
+  ["Log geleert"] = "Log cleared",
+  ["Unbekannter Befehl"] = "Unknown command",
+  ["Zugriff verweigert"] = "Access denied",
+}
+local function L(s) if CFG.SPRACHE == "en" then return EN[s] or s end return s end
 CFG.PROTOKOLL = CFG.NETZ .. "/daten"
 CFG.PROT_STEUER = CFG.NETZ .. "/steuer"
 -- ---------- SHA-256 (fuer gesicherte Fernbefehle) ----------
@@ -165,10 +177,10 @@ for _, n in ipairs(type(CFG.TEAM) == "table" and CFG.TEAM or {}) do team[tostrin
 
 -- ---------- Geraete ----------
 local modem = peripheral.find("modem", function(_, m) return m.isWireless() end)
-if not modem then error("Kein Ender Modem gefunden!", 0) end
+if not modem then error(L("Kein Ender Modem gefunden!"), 0) end
 rednet.open(peripheral.getName(modem))
 local det = peripheral.find("playerDetector") or peripheral.find("player_detector")
-if not det then error("Kein Player Detector gefunden!", 0) end
+if not det then error(L("Kein Player Detector gefunden!"), 0) end
 
 local function spielerJetzt()
   local b = CFG.BEREICH
@@ -222,8 +234,8 @@ local function zeigen()
   term.clear()
   local function z(y, text, f) term.setCursorPos(1, y) term.setTextColor(f or colors.white) term.write(text:sub(1, w)) end
   z(1, "CORVELYX // BETRETUNGSLOG", colors.cyan)
-  z(2, CFG.NAME .. "  -  heute: " .. heuteZahl() .. "  gesamt: " .. #eintraege, colors.lightGray)
-  if fehler then z(3, "Detector: " .. fehler, colors.red) end
+  z(2, CFG.NAME .. L("  -  heute: ") .. heuteZahl() .. L("  gesamt: ") .. #eintraege, colors.lightGray)
+  if fehler then z(3, L("Detector: ") .. fehler, colors.red) end
   for i = 1, math.min(#eintraege, h - 4) do
     local e = eintraege[i]
     z(4 + i, e.datum .. " " .. e.uhr .. "  " .. e.spieler, colors.white)
@@ -268,13 +280,13 @@ while true do
         and msg.sig == sha256(CFG.PASSWORT .. "|" .. msg.befehl .. "|" .. msg.wert .. "|" .. msg.nonce)
       local text
       if not ok then
-        text = "Zugriff verweigert"
+        text = L("Zugriff verweigert")
       elseif msg.befehl == "leeren" then
         eintraege = {}
         speichern()
-        text = "Log geleert"
+        text = L("Log geleert")
       else
-        ok, text = false, "Unbekannter Befehl"
+        ok, text = false, L("Unbekannter Befehl")
       end
       rednet.send(id, signieren({ typ = "antwort", ok = ok, text = CFG.NAME .. ": " .. text }), CFG.PROT_STEUER)
       zeigen()

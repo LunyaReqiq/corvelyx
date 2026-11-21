@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // MOBFARM  v1
+--  CORVELYX // MOBFARM  v1.1
 --  Ersetzt den Hebel am Create Redstone Link: Der Computer
 --  gibt ein DAUERHAFTES Redstone-Signal, solange die
 --  Mobfarmen an sein sollen. Schalten vom Control Center
@@ -19,6 +19,23 @@ local CFG = {
 }
 -- Einstellungen aus corvelyx.cfg (Update-System) uebernehmen
 if type(CORVELYX_CFG) == "table" then for k, v in pairs(CORVELYX_CFG) do CFG[k] = v end end
+-- Sprache (de/en) - wird vom Update-Computer fuers ganze Netz vorgegeben
+local EN = {
+  ["  (Signal: "] = "  (signal: ",
+  ["AN  - Farmen laufen"] = "ON  - farms running",
+  ["AUS - Farmen gestoppt"] = "OFF - farms stopped",
+  ["Kein Ender Modem gefunden!"] = "No Ender Modem found!",
+  ["Leertaste oder Feld anklicken = umschalten"] = "Space or click the field = toggle",
+  ["Mobfarmen"] = "Mob farms",
+  ["SEITE muss top, bottom, left, right, front oder back sein"] = "SEITE must be top, bottom, left, right, front or back",
+  ["Seit "] = "Since ",
+  ["Unbekannter Befehl"] = "Unknown command",
+  ["Zugriff verweigert"] = "Access denied",
+  ["ausgeschaltet"] = "switched off",
+  ["eingeschaltet"] = "switched on",
+  ["vor Ort"] = "on site",
+}
+local function L(s) if CFG.SPRACHE == "en" then return EN[s] or s end return s end
 CFG.PROTOKOLL   = CFG.NETZ .. "/daten"
 CFG.PROT_STEUER = CFG.NETZ .. "/steuer"
 -- ---------- SHA-256 (fuer gesicherte Fernbefehle) ----------
@@ -137,7 +154,7 @@ end
 
 -- ---------- Zustand ----------
 local SEITEN = { top = true, bottom = true, left = true, right = true, front = true, back = true }
-if not SEITEN[CFG.SEITE] then error("SEITE muss top, bottom, left, right, front oder back sein", 0) end
+if not SEITEN[CFG.SEITE] then error(L("SEITE muss top, bottom, left, right, front oder back sein"), 0) end
 
 local zustand = { an = false, seit = nil, wer = nil }
 if fs.exists(DATEI) then
@@ -162,7 +179,7 @@ end
 rs.setOutput(CFG.SEITE, zustand.an)
 
 local modem = peripheral.find("modem", function(_, m) return m.isWireless() end)
-if not modem then error("Kein Ender Modem gefunden!", 0) end
+if not modem then error(L("Kein Ender Modem gefunden!"), 0) end
 rednet.open(peripheral.getName(modem))
 
 -- ---------- Fernbefehle ----------
@@ -197,16 +214,16 @@ local function zeigen()
     term.write(text:sub(1, w))
   end
   z(1, "CORVELYX // MOBFARM", colors.cyan)
-  z(2, CFG.NAME .. "  (Signal: " .. CFG.SEITE .. ")", colors.lightGray)
+  z(2, CFG.NAME .. L("  (Signal: ") .. CFG.SEITE .. ")", colors.lightGray)
   local bg = zustand.an and colors.green or colors.gray
-  local txt = zustand.an and "AN  - Farmen laufen" or "AUS - Farmen gestoppt"
+  local txt = zustand.an and L("AN  - Farmen laufen") or L("AUS - Farmen gestoppt")
   for y = 4, 6 do z(y, string.rep(" ", w), colors.white, bg) end
   term.setCursorPos(math.floor((w - #txt) / 2) + 1, 5) term.setBackgroundColor(bg) term.setTextColor(colors.white)
   term.write(txt)
   knopf = { y1 = 4, y2 = 6 }
   term.setBackgroundColor(colors.black)
-  if zustand.seit then z(8, "Seit " .. zustand.seit .. (zustand.wer and (" (" .. zustand.wer .. ")") or ""), colors.lightGray) end
-  z(h, "Leertaste oder Feld anklicken = umschalten", colors.gray)
+  if zustand.seit then z(8, L("Seit ") .. zustand.seit .. (zustand.wer and (" (" .. zustand.wer .. ")") or ""), colors.lightGray) end
+  z(h, L("Leertaste oder Feld anklicken = umschalten"), colors.gray)
 end
 
 -- ---------- Hauptschleife ----------
@@ -221,7 +238,7 @@ while true do
     senden()
   elseif (ev[1] == "key" and (ev[2] == keys.space or ev[2] == keys.enter))
       or (ev[1] == "mouse_click" and knopf and ev[4] >= knopf.y1 and ev[4] <= knopf.y2) then
-    schalten(not zustand.an, "vor Ort")
+    schalten(not zustand.an, L("vor Ort"))
     zeigen()
     senden()
   elseif ev[1] == "rednet_message" and ev[4] == CFG.PROT_STEUER then
@@ -231,10 +248,10 @@ while true do
       local ok = nonceEinloesen(msg.nonce)
         and msg.sig == sha256(CFG.PASSWORT .. "|" .. msg.befehl .. "|" .. msg.wert .. "|" .. msg.nonce)
       local text
-      if not ok then text = "Zugriff verweigert"
-      elseif msg.befehl == "an" then schalten(true, "Control Center") text = "eingeschaltet"
-      elseif msg.befehl == "aus" then schalten(false, "Control Center") text = "ausgeschaltet"
-      else ok, text = false, "Unbekannter Befehl" end
+      if not ok then text = L("Zugriff verweigert")
+      elseif msg.befehl == "an" then schalten(true, L("Control Center")) text = L("eingeschaltet")
+      elseif msg.befehl == "aus" then schalten(false, L("Control Center")) text = L("ausgeschaltet")
+      else ok, text = false, L("Unbekannter Befehl") end
       rednet.send(id, signieren({ typ = "antwort", ok = ok, text = CFG.NAME .. ": " .. text }), CFG.PROT_STEUER)
       zeigen()
       senden()

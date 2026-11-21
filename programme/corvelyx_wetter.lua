@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // WETTER- & TAGESZENTRALE  v3
+--  CORVELYX // WETTER- & TAGESZENTRALE  v3.1
 --  Liest Tageszeit, Regen, Gewitter und Mondphase
 --  und funkt den Stand an das Control Center.
 --
@@ -51,6 +51,57 @@ local CFG = {
 }
 -- Einstellungen aus corvelyx.cfg (Update-System) uebernehmen
 if type(CORVELYX_CFG) == "table" then for k, v in pairs(CORVELYX_CFG) do CFG[k] = v end end
+-- Sprache (de/en) - wird vom Update-Computer fuers ganze Netz vorgegeben
+local EN = {
+  ["   Strg+T = Ende"] = "   Ctrl+T = quit",
+  ["  Gewitter -> klar  "] = "  Thunder -> clear  ",
+  ["  Nacht ueberspr.   "] = "  Skip night        ",
+  ["  Regen -> klar     "] = "  Rain -> clear     ",
+  [" -> klar"] = " -> clear",
+  [" Uhr   "] = "   ",
+  [" ausgeloest"] = " triggered",
+  [" fehlt"] = " missing",
+  [" nicht verbaut"] = " not installed",
+  ["AN"] = "ON",
+  ["AUS"] = "OFF",
+  ["Abend"] = "Evening",
+  ["Abgelehnt: PC #"] = "Refused: PC #",
+  ["Abnehmend (gross)"] = "Waning gibbous",
+  ["Abnehmend (klein)"] = "Waning crescent",
+  ["Auto: Nacht uebersprungen"] = "Auto: night skipped",
+  ["Automatik:"] = "Automatic:",
+  ["Dafuer fehlt: "] = "Missing for this: ",
+  ["Erstes Viertel"] = "First quarter",
+  ["Funk: "] = "Radio: ",
+  ["Geraet "] = "Device ",
+  ["Gewitter"] = "Thunder",
+  ["Gewitter -> klar"] = "Thunder -> clear",
+  ["Kein Environment Detector gefunden!"] = "No Environment Detector found!",
+  ["Klar"] = "Clear",
+  ["Letztes Viertel"] = "Last quarter",
+  ["Manipulatoren:"] = "Manipulators:",
+  ["Mittag"] = "Noon",
+  ["Mond:   "] = "Moon:    ",
+  ["Morgen"] = "Morning",
+  ["NACHT"] = "NIGHT",
+  ["Nacht"] = "Night",
+  ["Neumond"] = "New moon",
+  ["Regen"] = "Rain",
+  ["Regen -> klar"] = "Rain -> clear",
+  ["TAG"] = "DAY",
+  ["Tag "] = "Day ",
+  ["Unbekannte Automatik"] = "Unknown automatic",
+  ["Unbekannte Funktion"] = "Unknown function",
+  ["Unbekannter Befehl"] = "Unknown command",
+  ["Vollmond"] = "Full moon",
+  ["Wetter: "] = "Weather: ",
+  ["Zugriff verweigert"] = "Access denied",
+  ["Zunehmend (gross)"] = "Waxing gibbous",
+  ["Zunehmend (klein)"] = "Waxing crescent",
+  ["kein Ender Modem"] = "no Ender Modem",
+  ["keine (nur Anzeige)"] = "none (display only)",
+}
+local function L(s) if CFG.SPRACHE == "en" then return EN[s] or s end return s end
 
 CFG.PROT_DATEN  = CFG.NETZ .. "/daten"
 CFG.PROT_WETTER = CFG.NETZ .. "/wetter"
@@ -137,19 +188,19 @@ local function signieren(inhalt)
 end
 
 local MONDE = {
-  [0] = "Vollmond", "Abnehmend (gross)", "Letztes Viertel", "Abnehmend (klein)",
-  "Neumond", "Zunehmend (klein)", "Erstes Viertel", "Zunehmend (gross)",
+  [0] = L("Vollmond"), L("Abnehmend (gross)"), L("Letztes Viertel"), L("Abnehmend (klein)"),
+  L("Neumond"), L("Zunehmend (klein)"), L("Erstes Viertel"), L("Zunehmend (gross)"),
 }
 
 local NAMEN = {
-  clear = "Klar", rain = "Regen", thunder = "Gewitter",
-  morgen = "Morgen", mittag = "Mittag", abend = "Abend", nacht = "Nacht",
-  regen = "Regen -> klar", gewitter = "Gewitter -> klar",
+  clear = L("Klar"), rain = L("Regen"), thunder = L("Gewitter"),
+  morgen = L("Morgen"), mittag = L("Mittag"), abend = L("Abend"), nacht = L("Nacht"),
+  regen = L("Regen -> klar"), gewitter = L("Gewitter -> klar"),
 }
 
 -- ---------- Peripherie ----------
 local det = peripheral.find("environment_detector") or peripheral.find("environmentDetector")
-if not det then error("Kein Environment Detector gefunden!") end
+if not det then error(L("Kein Environment Detector gefunden!")) end
 
 local modem = peripheral.find("modem", function(_, m) return m.isWireless() end)
 if modem then rednet.open(peripheral.getName(modem)) end
@@ -201,7 +252,7 @@ local impulse = {}   -- [timerId] = funktion (zum Abschalten)
 local function setzen(f, an)
   if f.geraet then
     local g = peripheral.wrap(f.geraet)
-    if not g then return false, "Geraet " .. f.geraet .. " fehlt" end
+    if not g then return false, L("Geraet ") .. f.geraet .. L(" fehlt") end
     local ok, err = pcall(g.setOutput, f.seite, an)
     return ok, err
   end
@@ -211,7 +262,7 @@ end
 
 local function ausloesen(name)
   local f = CFG.FUNKTIONEN[name]
-  if not f then return false, NAMEN[name] .. " nicht verbaut" end
+  if not f then return false, NAMEN[name] .. L(" nicht verbaut") end
   local ok, err = setzen(f, true)
   if not ok then return false, tostring(err) end
   impulse[os.startTimer(CFG.IMPULS)] = f
@@ -243,12 +294,12 @@ local function automatik(z)
   if os.clock() - letzteAktion < CFG.AUTO_PAUSE then return end
   if (auto.gewitter and z.gewitter) or (auto.regen and z.regen) then
     if ausloesen("clear") then
-      log("Auto: " .. (z.gewitter and "Gewitter" or "Regen") .. " -> klar")
+      log(L("Auto: ") .. (z.gewitter and L("Gewitter") or L("Regen")) .. L(" -> klar"))
       letzteAktion = os.clock()
     end
   elseif auto.nacht and z.nacht then
     if ausloesen("morgen") then
-      log("Auto: Nacht uebersprungen")
+      log(L("Auto: Nacht uebersprungen"))
       letzteAktion = os.clock()
     end
   end
@@ -279,31 +330,31 @@ local function befehl(id, msg)
      or type(msg.nonce) ~= "string" or type(msg.sig) ~= "string" then return end
   local erwartet = sha256(CFG.PASSWORT .. "|" .. msg.befehl .. "|" .. msg.wert .. "|" .. msg.nonce)
   if not nonceEinloesen(msg.nonce) or msg.sig ~= erwartet then
-    log("Abgelehnt: PC #" .. id)
-    antwort(false, "Zugriff verweigert")
+    log(L("Abgelehnt: PC #") .. id)
+    antwort(false, L("Zugriff verweigert"))
     return
   end
 
   if msg.befehl == "wetter" or msg.befehl == "zeit" then
-    if not NAMEN[msg.wert] then antwort(false, "Unbekannte Funktion") return end
+    if not NAMEN[msg.wert] then antwort(false, L("Unbekannte Funktion")) return end
     local ok, err = ausloesen(msg.wert)
-    if ok then log(NAMEN[msg.wert] .. " (PC #" .. id .. ")") end
-    antwort(ok, ok and (NAMEN[msg.wert] .. " ausgeloest") or err)
+    if ok then log(NAMEN[msg.wert] .. L(" (PC #") .. id .. ")") end
+    antwort(ok, ok and (NAMEN[msg.wert] .. L(" ausgeloest")) or err)
 
   elseif msg.befehl == "auto" then
     local name, an = msg.wert:match("^(%w+)=([01])$")
-    if not name or auto[name] == nil then antwort(false, "Unbekannte Automatik") return end
+    if not name or auto[name] == nil then antwort(false, L("Unbekannte Automatik")) return end
     if an == "1" and not CFG.FUNKTIONEN[BRAUCHT[name]] then
-      antwort(false, "Dafuer fehlt: " .. NAMEN[BRAUCHT[name]])
+      antwort(false, L("Dafuer fehlt: ") .. NAMEN[BRAUCHT[name]])
       return
     end
     auto[name] = (an == "1")
     speichern()
     letzteAktion = -1000
-    log(NAMEN[name] .. ": " .. (auto[name] and "AN" or "AUS"))
-    antwort(true, NAMEN[name] .. ": " .. (auto[name] and "AN" or "AUS"))
+    log(NAMEN[name] .. ": " .. (auto[name] and L("AN") or L("AUS")))
+    antwort(true, NAMEN[name] .. ": " .. (auto[name] and L("AN") or L("AUS")))
   else
-    antwort(false, "Unbekannter Befehl")
+    antwort(false, L("Unbekannter Befehl"))
   end
 end
 
@@ -319,26 +370,26 @@ local function anzeigen(z)
   term.setBackgroundColor(colors.black)
   term.clear()
   zeile(1, "CORVELYX // WETTER & ZEIT", colors.cyan)
-  zeile(3, "Tag " .. z.tag .. "   " .. textutils.formatTime(z.uhr, true) .. " Uhr   "
-    .. (z.nacht and "NACHT" or "TAG"), z.nacht and colors.lightBlue or colors.yellow)
-  local wetter = z.gewitter and "Gewitter" or (z.regen and "Regen" or "Klar")
-  zeile(4, "Wetter: " .. wetter, z.gewitter and colors.red or (z.regen and colors.lightBlue or colors.lime))
-  zeile(5, "Mond:   " .. z.mondName, z.mond == 0 and colors.orange or colors.white)
+  zeile(3, L("Tag ") .. z.tag .. "   " .. textutils.formatTime(z.uhr, true) .. L(" Uhr   ")
+    .. (z.nacht and L("NACHT") or L("TAG")), z.nacht and colors.lightBlue or colors.yellow)
+  local wetter = z.gewitter and L("Gewitter") or (z.regen and L("Regen") or L("Klar"))
+  zeile(4, L("Wetter: ") .. wetter, z.gewitter and colors.red or (z.regen and colors.lightBlue or colors.lime))
+  zeile(5, L("Mond:   ") .. z.mondName, z.mond == 0 and colors.orange or colors.white)
 
   local fl = {}
   for _, n in ipairs(verfuegbar()) do
     local f = CFG.FUNKTIONEN[n]
     fl[#fl + 1] = NAMEN[n] .. "=" .. (f.geraet and (f.geraet .. ":") or "") .. f.seite
   end
-  zeile(7, "Manipulatoren:", colors.cyan)
-  zeile(8, #fl > 0 and table.concat(fl, "  ") or "keine (nur Anzeige)", colors.lightGray)
+  zeile(7, L("Manipulatoren:"), colors.cyan)
+  zeile(8, #fl > 0 and table.concat(fl, "  ") or L("keine (nur Anzeige)"), colors.lightGray)
 
-  zeile(10, "Automatik:", colors.cyan)
-  zeile(11, "  Regen -> klar     " .. (auto.regen and "AN" or "aus"), auto.regen and colors.lime or colors.gray)
-  zeile(12, "  Gewitter -> klar  " .. (auto.gewitter and "AN" or "aus"), auto.gewitter and colors.lime or colors.gray)
-  zeile(13, "  Nacht ueberspr.   " .. (auto.nacht and "AN" or "aus"), auto.nacht and colors.lime or colors.gray)
+  zeile(10, L("Automatik:"), colors.cyan)
+  zeile(11, L("  Regen -> klar     ") .. (auto.regen and L("AN") or (L("AUS")):lower()), auto.regen and colors.lime or colors.gray)
+  zeile(12, L("  Gewitter -> klar  ") .. (auto.gewitter and L("AN") or (L("AUS")):lower()), auto.gewitter and colors.lime or colors.gray)
+  zeile(13, L("  Nacht ueberspr.   ") .. (auto.nacht and L("AN") or (L("AUS")):lower()), auto.nacht and colors.lime or colors.gray)
   for i, l in ipairs(logZeilen) do zeile(13 + i, l, colors.lightGray) end
-  zeile(19, "Funk: " .. (modem and "an" or "kein Ender Modem") .. "   Strg+T = Ende", colors.gray)
+  zeile(19, L("Funk: ") .. (modem and (L("AN")):lower() or L("kein Ender Modem")) .. L("   Strg+T = Ende"), colors.gray)
 end
 
 -- ---------- Hauptschleife ----------

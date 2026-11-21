@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // LAGER-SENDER  v1
+--  CORVELYX // LAGER-SENDER  v1.1
 --  Liest den Storage Controller von Functional Storage
 --  (alle verbundenen Drawer) und funkt Inhalt, Menge und
 --  Kapazitaet jedes Fachs an Control Center und Pocket.
@@ -18,6 +18,22 @@ local CFG = {
 }
 -- Einstellungen aus corvelyx.cfg (Update-System) uebernehmen
 if type(CORVELYX_CFG) == "table" then for k, v in pairs(CORVELYX_CFG) do CFG[k] = v end end
+-- Sprache (de/en) - wird vom Update-Computer fuers ganze Netz vorgegeben
+local EN = {
+  [" belegt / "] = " used / ",
+  [" s. Strg+T = Ende"] = " s. Ctrl+T = quit",
+  ["Faecher: "] = "Slots: ",
+  ["Fast voll (>=95%): "] = "Almost full (>=95%): ",
+  ["Fehler: "] = "Error: ",
+  ["Geraet: "] = "Device: ",
+  ["Items gesamt: "] = "Items total: ",
+  ["Kein Ender Modem gefunden!"] = "No Ender Modem found!",
+  ["Kein Storage Controller / Inventar gefunden!"] = "No Storage Controller / inventory found!",
+  ["Lager"] = "Storage",
+  ["Lesen fehlgeschlagen: "] = "Reading failed: ",
+  ["Sendet alle "] = "Sending every ",
+}
+local function L(s) if CFG.SPRACHE == "en" then return EN[s] or s end return s end
 CFG.PROTOKOLL = CFG.NETZ .. "/daten"
 
 -- ---------- SHA-256 (fuer gesicherte Fernbefehle) ----------
@@ -120,11 +136,11 @@ if not lager then
     if peripheral.hasType(n, "inventory") then lager = n break end
   end
 end
-if not lager then error("Kein Storage Controller / Inventar gefunden!") end
+if not lager then error(L("Kein Storage Controller / Inventar gefunden!")) end
 local inv = peripheral.wrap(lager)
 
 local modem = peripheral.find("modem", function(_, m) return m.isWireless() end)
-if not modem then error("Kein Ender Modem gefunden!") end
+if not modem then error(L("Kein Ender Modem gefunden!")) end
 rednet.open(peripheral.getName(modem))
 
 -- ---------- Zwischenspeicher (spart Zeit) ----------
@@ -143,7 +159,7 @@ end
 
 local function lesen()
   local ok, liste = pcall(inv.list)
-  if not ok or type(liste) ~= "table" then error("Lesen fehlgeschlagen: " .. tostring(liste)) end
+  if not ok or type(liste) ~= "table" then error(L("Lesen fehlgeschlagen: ") .. tostring(liste)) end
   local okS, groesse = pcall(inv.size)
   local neuLimits = (os.clock() - limitZeit) >= CFG.LIMIT_NEU
   if neuLimits then limits = {} limitZeit = os.clock() end
@@ -174,7 +190,7 @@ while true do
   term.setTextColor(colors.cyan)
   print("CORVELYX // LAGER-SENDER   " .. CFG.NAME)
   term.setTextColor(colors.white)
-  print("Geraet: " .. lager)
+  print(L("Geraet: ") .. lager)
   if ok then
     rednet.broadcast(signieren({ typ = "status", quelle = "lager", schluessel = "lager-" .. os.getComputerID(),
       ort = CFG.NAME, slots = groesse, faecher = faecher }), CFG.PROTOKOLL)
@@ -183,16 +199,16 @@ while true do
       summe = summe + f.menge
       if f.limit > 0 and f.menge / f.limit >= 0.95 then voll = voll + 1 end
     end
-    print("Faecher: " .. #faecher .. " belegt / " .. tostring(groesse))
-    print("Items gesamt: " .. kurz(summe))
+    print(L("Faecher: ") .. #faecher .. L(" belegt / ") .. tostring(groesse))
+    print(L("Items gesamt: ") .. kurz(summe))
     term.setTextColor(voll > 0 and colors.orange or colors.lime)
-    print("Fast voll (>=95%): " .. voll)
+    print(L("Fast voll (>=95%): ") .. voll)
   else
     term.setTextColor(colors.red)
-    print("Fehler: " .. tostring(faecher))
+    print(L("Fehler: ") .. tostring(faecher))
   end
   term.setTextColor(colors.gray)
   print("")
-  print("Sendet alle " .. CFG.INTERVALL .. " s. Strg+T = Ende")
+  print(L("Sendet alle ") .. CFG.INTERVALL .. L(" s. Strg+T = Ende"))
   sleep(CFG.INTERVALL)
 end

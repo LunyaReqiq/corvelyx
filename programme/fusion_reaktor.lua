@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // FUSION-REAKTOR  v1.2
+--  CORVELYX // FUSION-REAKTOR  v1.3
 --  Steuerung fuer den Mekanism-Fusionsreaktor.
 --  Liest alle Werte, funkt sie an Control Center und
 --  Pocket und nimmt gesicherte Befehle an:
@@ -34,6 +34,35 @@ local CFG = {
 }
 -- Einstellungen aus corvelyx.cfg (Update-System) uebernehmen
 if type(CORVELYX_CFG) == "table" then for k, v in pairs(CORVELYX_CFG) do CFG[k] = v end end
+-- Sprache (de/en) - wird vom Update-Computer fuers ganze Netz vorgegeben
+local EN = {
+  [" (Automatik aus)"] = " (automatic off)",
+  [" - wartet auf Matrix-Daten"] = " - waiting for matrix data",
+  [" K   Gehaeuse: "] = " K   Casing: ",
+  ["AN"] = "ON",
+  ["AUS"] = "OFF",
+  ["Abgelehnt: PC #"] = "Refused: PC #",
+  ["Automatik "] = "Automatic ",
+  ["Automatik: "] = "Automatic: ",
+  ["Fehler: "] = "Error: ",
+  ["Funk an   Strg+T = Ende"] = "Radio on   Ctrl+T = quit",
+  ["Fusion ERLOSCHEN"] = "Fusion WENT OUT",
+  ["GEZUENDET"] = "IGNITED",
+  ["Injection 0 - Fusion erlischt (Neuzuendung per Laser)"] = "Injection 0 - fusion goes out (re-ignite with laser)",
+  ["Injection Rate "] = "Injection rate ",
+  ["Kein Ender Modem gefunden!"] = "No Ender Modem found!",
+  ["Kein Fusion Reactor Logic Adapter gefunden!"] = "No Fusion Reactor Logic Adapter found!",
+  ["NICHT GEZUENDET (Laser noetig)"] = "NOT IGNITED (laser needed)",
+  ["Produktion: "] = "Production: ",
+  ["Reaktor nicht geformt"] = "Reactor not formed",
+  ["STOPP (PC #"] = "STOP (PC #",
+  ["Startet: "] = "Starting: ",
+  ["Unbekannter Befehl"] = "Unknown command",
+  ["Ungueltiger Wert"] = "Invalid value",
+  ["Zugriff verweigert"] = "Access denied",
+  ["keine Daten"] = "no data",
+}
+local function L(s) if CFG.SPRACHE == "en" then return EN[s] or s end return s end
 CFG.PROT_DATEN  = CFG.NETZ .. "/daten"
 CFG.PROT_FUSION = CFG.NETZ .. "/fusion"
 
@@ -144,10 +173,10 @@ for _, n in ipairs(peripheral.getNames()) do
     port = n break
   end
 end
-if not port then error("Kein Fusion Reactor Logic Adapter gefunden!") end
+if not port then error(L("Kein Fusion Reactor Logic Adapter gefunden!")) end
 
 local modem = peripheral.find("modem", function(_, m) return m.isWireless() end)
-if not modem then error("Kein Ender Modem gefunden!") end
+if not modem then error(L("Kein Ender Modem gefunden!")) end
 rednet.open(peripheral.getName(modem))
 
 -- Jedes Mal frisch nachfragen (Multiblock kann neu formen)
@@ -197,7 +226,7 @@ end
 
 -- ---------- Auslesen ----------
 local function lesen()
-  if r("isFormed") == false then error("Reaktor nicht geformt") end
+  if r("isFormed") == false then error(L("Reaktor nicht geformt")) end
   local d = {}
   local aktiv = r("isActiveCooledLogic") == true
   d.aktivKuehl   = aktiv
@@ -286,32 +315,32 @@ local function befehl(id, msg)
      or type(msg.nonce) ~= "string" or type(msg.sig) ~= "string" then return end
   local erwartet = sha256(CFG.PASSWORT .. "|" .. msg.befehl .. "|" .. msg.wert .. "|" .. msg.nonce)
   if not nonceEinloesen(msg.nonce) or msg.sig ~= erwartet then
-    log("Abgelehnt: PC #" .. id)
-    antwort(false, "Zugriff verweigert")
+    log(L("Abgelehnt: PC #") .. id)
+    antwort(false, L("Zugriff verweigert"))
     return
   end
   if msg.befehl == "rate" then
     local v = tonumber(msg.wert)
-    if not v then antwort(false, "Ungueltiger Wert") return end
+    if not v then antwort(false, L("Ungueltiger Wert")) return end
     v = math.max(0, math.min(98, gerade(v)))
     r("setInjectionRate", v)
     local hinweis = ""
-    if auto then auto = false speichern() hinweis = " (Automatik aus)" end
-    log("Injection " .. v .. hinweis)
-    antwort(true, "Injection Rate " .. v .. hinweis)
+    if auto then auto = false speichern() hinweis = L(" (Automatik aus)") end
+    log(L("Injection ") .. v .. hinweis)
+    antwort(true, L("Injection Rate ") .. v .. hinweis)
   elseif msg.befehl == "stopp" then
     r("setInjectionRate", 0)
     if auto then auto = false speichern() end
-    log("STOPP (PC #" .. id .. ")")
-    antwort(true, "Injection 0 - Fusion erlischt (Neuzuendung per Laser)")
+    log(L("STOPP (PC #") .. id .. ")")
+    antwort(true, L("Injection 0 - Fusion erlischt (Neuzuendung per Laser)"))
   elseif msg.befehl == "auto" then
     auto = (msg.wert == "1")
     speichern()
-    log("Automatik " .. (auto and "AN" or "AUS"))
-    antwort(true, "Automatik " .. (auto and "AN" or "AUS") ..
-      ((auto and not matrixFrisch()) and " - wartet auf Matrix-Daten" or ""))
+    log(L("Automatik ") .. (auto and L("AN") or L("AUS")))
+    antwort(true, L("Automatik ") .. (auto and L("AN") or L("AUS")) ..
+      ((auto and not matrixFrisch()) and L(" - wartet auf Matrix-Daten") or ""))
   else
-    antwort(false, "Unbekannter Befehl")
+    antwort(false, L("Unbekannter Befehl"))
   end
 end
 
@@ -335,20 +364,20 @@ local function anzeigen(d, fehler, puffer)
   term.clear()
   zeile(1, "CORVELYX // FUSION-REAKTOR   " .. CFG.NAME, colors.cyan)
   if fehler then
-    zeile(3, (puffer and "Startet: " or "Fehler: ") .. tostring(fehler) .. (puffer and (" (" .. puffer .. " s)") or ""),
+    zeile(3, (puffer and L("Startet: ") or L("Fehler: ")) .. tostring(fehler) .. (puffer and (" (" .. puffer .. " s)") or ""),
       puffer and colors.orange or colors.red)
   elseif d then
-    zeile(3, d.gezuendet and "GEZUENDET" or "NICHT GEZUENDET (Laser noetig)", d.gezuendet and colors.lime or colors.orange)
-    zeile(4, "Plasma: " .. kurz(d.plasma) .. " K   Gehaeuse: " .. kurz(d.gehaeuse) .. " K")
-    zeile(5, "Injection: " .. tostring(d.rate) .. "  (min " .. tostring(d.rateMin or "?") .. ")")
-    zeile(6, "Produktion: " .. kurz(d.prod) .. " FE/t")
+    zeile(3, d.gezuendet and L("GEZUENDET") or L("NICHT GEZUENDET (Laser noetig)"), d.gezuendet and colors.lime or colors.orange)
+    zeile(4, L("Plasma: ") .. kurz(d.plasma) .. L(" K   Gehaeuse: ") .. kurz(d.gehaeuse) .. " K")
+    zeile(5, L("Injection: ") .. tostring(d.rate) .. L("  (min ") .. tostring(d.rateMin or "?") .. ")")
+    zeile(6, L("Produktion: ") .. kurz(d.prod) .. " FE/t")
     zeile(7, "D-T: " .. kurz(d.dt) .. " / " .. kurz(d.dtMax) .. " mB")
   end
-  zeile(9, "Automatik: " .. (auto and "AN" or "aus") .. "   Matrix: " ..
-    (matrixFrisch() and string.format("%.0f %%", matrix.anteil * 100) or "keine Daten"),
+  zeile(9, L("Automatik: ") .. (auto and L("AN") or (L("AUS")):lower()) .. L("   Matrix: ") ..
+    (matrixFrisch() and string.format("%.0f %%", matrix.anteil * 100) or L("keine Daten")),
     auto and colors.lime or colors.gray)
   for i, l in ipairs(logZeilen) do zeile(10 + i, l, colors.lightGray) end
-  zeile(18, "Funk an   Strg+T = Ende", colors.gray)
+  zeile(18, L("Funk an   Strg+T = Ende"), colors.gray)
 end
 
 -- ---------- Hauptschleife ----------
@@ -365,7 +394,7 @@ while true do
     local daten, fehlerText, puffer
     if ok then
       fehlerSeit, letzteGute = nil, d
-      if zuletztGezuendet == true and not d.gezuendet then log("Fusion ERLOSCHEN") end
+      if zuletztGezuendet == true and not d.gezuendet then log(L("Fusion ERLOSCHEN")) end
       zuletztGezuendet = d.gezuendet
       automatik(d)
       daten = d

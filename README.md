@@ -26,6 +26,7 @@ Reaktoren, Energiespeicher, ME-System, Wetter, Mobfarmen und Besucher auf einen 
 | **Besucher** | Betretungslog an der Tür: Spieler außerhalb des Teams werden mit Datum und deutscher Uhrzeit protokolliert. |
 | **Chat-Alarme** | Mit einer Chat Box am Control Center gehen Alarme als Chat-Nachricht nur an die eingetragenen Team-Spieler. Fällt die Server-TPS ab, bekommen alle Spieler eine Warnung. |
 | **Pocket** | Alle Seiten im Kleinformat für unterwegs, inklusive Steuerung. |
+| **Sprache** | Deutsch oder Englisch für das ganze Netz, einmal am Update-Computer umgeschaltet. |
 
 <table>
 <tr>
@@ -115,6 +116,12 @@ GitHub ──> Update-Computer ──Funknetz, signiert──> alle Corvelyx-Com
 | `tuer_sender.lua` | Betretungslog: Player Detector an der Tür |
 | `mobfarm.lua` | Mobfarm-Schalter: dauerhaftes Redstone-Signal zum Create Redstone Link |
 | `laser_zuender.lua` | Laser-Zünder am Laser Amplifier („Laser 1“ gehört zu „Fusion 1“) |
+
+## Sprache / Language
+
+Corvelyx läuft auf Deutsch oder Englisch. Die Sprache gilt immer für das **ganze Netz** und wird nur am Update-Computer eingestellt: dort **S** drücken. Der Update-Computer startet neu, alle anderen Computer übernehmen die Sprache und starten ebenfalls neu. Auch die TPS-Warnung im Chat kommt in dieser Sprache.
+
+*Corvelyx speaks German or English. The language always applies to the whole network and is set on the update computer only: press **S** there. All other computers pick it up and restart automatically.*
 
 ## Einstellungen ändern
 

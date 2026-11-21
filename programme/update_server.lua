@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // UPDATE-SERVER  v1.3
+--  CORVELYX // UPDATE-SERVER  v1.4
 --  Holt die Programme aus deinem privaten GitHub-Repo und
 --  verteilt sie ueber das Funknetz an alle Corvelyx-
 --  Computer. Nur DIESER Computer kennt den GitHub-Token.
@@ -19,9 +19,41 @@ local CFG = {
   PRUEF_INTERVALL  = 600,   -- Sekunden zwischen GitHub-Pruefungen
   STATUS_INTERVALL = 3,     -- Sekunden zwischen Statusmeldungen ans CC
   STAND_INTERVALL  = 300,   -- Sekunden: kompletter Stand fuer verpasste Updates
+  SPRACHE          = "de",  -- Sprache fuers GANZE Netz: "de" oder "en" (Taste S)
 }
 -- Einstellungen aus corvelyx.cfg (Update-System) uebernehmen
 if type(CORVELYX_CFG) == "table" then for k, v in pairs(CORVELYX_CFG) do CFG[k] = v end end
+-- Sprache (de/en) - wird vom Update-Computer fuers ganze Netz vorgegeben
+local EN = {
+  ["   U = jetzt pruefen"] = "   U = check now",
+  [" Programme, geprueft vor "] = " programs, checked ",
+  [" bekommt "] = " gets ",
+  [" min"] = " min ago",
+  ["Anfragen beantwortet: "] = "Requests answered: ",
+  ["Antwort von GitHub unlesbar"] = "Unreadable answer from GitHub",
+  ["Eigenes Update: "] = "Own update: ",
+  ["FEHLER: "] = "ERROR: ",
+  ["Fehler bei "] = "Error with ",
+  ["Fehler: "] = "Error: ",
+  ["Gestartet"] = "Started",
+  ["GitHub antwortet "] = "GitHub answers ",
+  ["GitHub-Benutzer fehlt (corvelyx.cfg)"] = "GitHub user missing (corvelyx.cfg)",
+  ["GitHub-Limit erreicht, versuche es spaeter"] = "GitHub limit reached, retrying later",
+  ["Kein Ender Modem gefunden!"] = "No Ender Modem found!",
+  ["Keine Verbindung: "] = "No connection: ",
+  ["Neu: "] = "New: ",
+  ["Neustart-Signal: "] = "Restart signal: ",
+  ["Pruefe GitHub ..."] = "Checking GitHub ...",
+  ["Pruefung angefordert von PC #"] = "Check requested by PC #",
+  ["Repo/Ordner nicht gefunden (Name? privat ohne Token?)"] = "Repo/folder not found (name? private without token?)",
+  ["Sprache: "] = "Language: ",
+  ["Sprache: Deutsch   S = Sprache wechseln"] = "Language: English   S = switch language",
+  ["Token ungueltig oder abgelaufen"] = "Token invalid or expired",
+  ["aktuell"] = "up to date",
+  ["corvelyx.cfg nicht lesbar"] = "corvelyx.cfg not readable",
+}
+local function L(s) if CFG.SPRACHE == "en" then return EN[s] or s end return s end
+if CFG.SPRACHE ~= "en" then CFG.SPRACHE = "de" end
 CFG.PROT_UPDATE = CFG.NETZ .. "/update"
 CFG.PROT_DATEN  = CFG.NETZ .. "/daten"
 -- ---------- SHA-256 (fuer gesicherte Fernbefehle) ----------
@@ -133,7 +165,7 @@ local function auspacken(id, msg)
 end
 
 local modem = peripheral.find("modem", function(_, m) return m.isWireless() end)
-if not modem then error("Kein Ender Modem gefunden!", 0) end
+if not modem then error(L("Kein Ender Modem gefunden!"), 0) end
 rednet.open(peripheral.getName(modem))
 fs.makeDir(SPEICHER)
 
@@ -168,11 +200,11 @@ local function api(pfad, roh)
   if not r then
     local code = fr and fr.getResponseCode()
     if fr then fr.close() end
-    if code == 401 then return nil, "Token ungueltig oder abgelaufen"
-    elseif code == 404 then return nil, "Repo/Ordner nicht gefunden (Name? privat ohne Token?)"
-    elseif code == 403 or code == 429 then return nil, "GitHub-Limit erreicht, versuche es spaeter"
-    elseif code then return nil, "GitHub antwortet " .. code end
-    return nil, "Keine Verbindung: " .. tostring(err)
+    if code == 401 then return nil, L("Token ungueltig oder abgelaufen")
+    elseif code == 404 then return nil, L("Repo/Ordner nicht gefunden (Name? privat ohne Token?)")
+    elseif code == 403 or code == 429 then return nil, L("GitHub-Limit erreicht, versuche es spaeter")
+    elseif code then return nil, L("GitHub antwortet ") .. code end
+    return nil, L("Keine Verbindung: ") .. tostring(err)
   end
   local s = r.readAll()
   r.close()
@@ -184,15 +216,15 @@ local function pruefen()
   if pruefLaeuft then return end
   pruefLaeuft = true
   if CFG.GITHUB_BENUTZER == "" then
-    status.fehler = "GitHub-Benutzer fehlt (corvelyx.cfg)"
+    status.fehler = L("GitHub-Benutzer fehlt (corvelyx.cfg)")
     pruefLaeuft = false
     return
   end
   local s, err = api(CFG.ORDNER, false)
   local liste = s and textutils.unserializeJSON(s)
   if type(liste) ~= "table" then
-    status.fehler = err or "Antwort von GitHub unlesbar"
-    log("Fehler: " .. status.fehler, colors.red)
+    status.fehler = err or L("Antwort von GitHub unlesbar")
+    log(L("Fehler: ") .. status.fehler, colors.red)
     pruefLaeuft = false
     return
   end
@@ -209,10 +241,10 @@ local function pruefen()
           local warNeu = (not alt) or alt.hash ~= h
           index[e.name] = { sha = e.sha, hash = h }
           if warNeu and alt then geaendert[e.name] = h end
-          if warNeu then log((alt and "Update: " or "Neu: ") .. e.name, colors.lime) end
+          if warNeu then log((alt and L("Update: ") or L("Neu: ")) .. e.name, colors.lime) end
         else
           status.fehler = err2
-          log("Fehler bei " .. e.name .. ": " .. tostring(err2), colors.red)
+          log(L("Fehler bei ") .. e.name .. ": " .. tostring(err2), colors.red)
         end
       end
     end
@@ -227,8 +259,8 @@ local function pruefen()
     for n in pairs(geaendert) do namen[#namen + 1] = n end
     table.sort(namen)
     status.zuletzt, status.zuletztZeit = namen, os.epoch("utc")
-    rednet.broadcast(signieren({ typ = "neustart", dateien = geaendert }), CFG.PROT_UPDATE)
-    log("Neustart-Signal: " .. table.concat(namen, ", "), colors.yellow)
+    rednet.broadcast(signieren({ typ = "neustart", dateien = geaendert, sprache = CFG.SPRACHE }), CFG.PROT_UPDATE)
+    log(L("Neustart-Signal: ") .. table.concat(namen, ", "), colors.yellow)
     -- Eigenes Update: Update-Server bzw. Lader auf diesem Computer ersetzen
   end
   -- Eigene Dateien abgleichen (z.B. frisch eingerichteter Update-Computer)
@@ -244,7 +276,7 @@ local function pruefen()
       local ist = lesen(e[2])
       if not ist or sha256(ist) ~= ix.hash then
         schreiben(e[2], soll)
-        log("Eigenes Update: " .. e[1], colors.lime)
+        log(L("Eigenes Update: ") .. e[1], colors.lime)
         neustart = true
       end
     end
@@ -263,31 +295,33 @@ local function zeigen()
   term.clear()
   local function z(y, text, f) term.setCursorPos(1, y) term.setTextColor(f or colors.white) term.write(text:sub(1, w)) end
   z(1, "CORVELYX // UPDATE-SERVER", colors.cyan)
-  z(2, "Repo: " .. CFG.GITHUB_BENUTZER .. "/" .. CFG.REPO .. " (" .. CFG.BRANCH .. ")", colors.lightGray)
+  z(2, L("Repo: ") .. CFG.GITHUB_BENUTZER .. "/" .. CFG.REPO .. " (" .. CFG.BRANCH .. ")", colors.lightGray)
   local zeile3, f3
-  if status.fehler then zeile3, f3 = "FEHLER: " .. status.fehler, colors.red
-  elseif status.letzte then zeile3, f3 = "OK - " .. (status.anzahl or 0) .. " Programme, geprueft vor "
-    .. math.floor((os.epoch("utc") - status.letzte) / 60000) .. " min", colors.lime
-  else zeile3, f3 = "Pruefe GitHub ...", colors.yellow end
+  if status.fehler then zeile3, f3 = L("FEHLER: ") .. status.fehler, colors.red
+  elseif status.letzte then zeile3, f3 = L("OK - ") .. (status.anzahl or 0) .. L(" Programme, geprueft vor ")
+    .. math.floor((os.epoch("utc") - status.letzte) / 60000) .. L(" min"), colors.lime
+  else zeile3, f3 = L("Pruefe GitHub ..."), colors.yellow end
   z(3, zeile3, f3)
-  z(4, "Anfragen beantwortet: " .. status.anfragen .. "   U = jetzt pruefen", colors.lightGray)
+  z(4, L("Anfragen beantwortet: ") .. status.anfragen .. L("   U = jetzt pruefen"), colors.lightGray)
+  z(5, L("Sprache: Deutsch   S = Sprache wechseln"), colors.lightGray)
   for i, e in ipairs(protokoll) do
-    if 5 + i > h then break end
-    z(5 + i, e[1], e[2])
+    if 6 + i > h then break end
+    z(6 + i, e[1], e[2])
   end
 end
 
 local function statusSenden()
   rednet.broadcast(signieren({ typ = "status", quelle = "update", schluessel = "update-" .. os.getComputerID(),
     daten = { fehler = status.fehler, letzte = status.letzte, anzahl = status.anzahl,
-      zuletzt = status.zuletzt, zuletztZeit = status.zuletztZeit, intervall = CFG.PRUEF_INTERVALL } }), CFG.PROT_DATEN)
+      zuletzt = status.zuletzt, zuletztZeit = status.zuletztZeit, intervall = CFG.PRUEF_INTERVALL,
+      sprache = CFG.SPRACHE } }), CFG.PROT_DATEN)
 end
 
 -- ---------- Anfragen ----------
 local function anfrage(id, a)
   if a.typ == "frage" and type(a.datei) == "string" then
     local eintrag = index[a.datei]
-    local antwort = { typ = "antwort", datei = a.datei, nonce = a.nonce }
+    local antwort = { typ = "antwort", datei = a.datei, nonce = a.nonce, sprache = CFG.SPRACHE }
     local msg
     if not eintrag or not fs.exists(SPEICHER .. "/" .. a.datei) then
       antwort.status = "unbekannt"
@@ -299,12 +333,12 @@ local function anfrage(id, a)
       antwort.status, antwort.hash = "neu", eintrag.hash
       msg = signieren(antwort)
       msg.inhalt = lesen(SPEICHER .. "/" .. a.datei)
-      log("PC #" .. id .. " bekommt " .. a.datei, colors.lightBlue)
+      log("PC #" .. id .. L(" bekommt ") .. a.datei, colors.lightBlue)
     end
     rednet.send(id, msg, CFG.PROT_UPDATE)
     status.anfragen = status.anfragen + 1
   elseif a.typ == "pruefen" then
-    log("Pruefung angefordert von PC #" .. id, colors.yellow)
+    log(L("Pruefung angefordert von PC #") .. id, colors.yellow)
     return true
   end
 end
@@ -315,11 +349,31 @@ end
 local function standSenden()
   local alle = {}
   for n, e in pairs(index) do alle[n] = e.hash end
-  rednet.broadcast(signieren({ typ = "neustart", dateien = alle, stand = true }), CFG.PROT_UPDATE)
+  rednet.broadcast(signieren({ typ = "neustart", dateien = alle, stand = true, sprache = CFG.SPRACHE }), CFG.PROT_UPDATE)
+end
+
+-- Sprache fuers ganze Netz umschalten: corvelyx.cfg aendern, neu starten.
+-- Nach dem Neustart meldet der Server die neue Sprache, alle Computer
+-- uebernehmen sie und starten neu.
+local function spracheWechseln()
+  local neu = (CFG.SPRACHE == "en") and "de" or "en"
+  local s = lesen("corvelyx.cfg")
+  local t = s and textutils.unserialize((s:gsub("^%-%-[^\n]*\n", "")))
+  if type(t) ~= "table" then log(L("corvelyx.cfg nicht lesbar"), colors.red) return end
+  t.SPRACHE = neu
+  local f = fs.open("corvelyx.cfg", "w")
+  f.write("-- CORVELYX Einstellungen (bleiben bei Updates erhalten)\n")
+  f.write(textutils.serialize(t))
+  f.close()
+  CFG.SPRACHE = neu
+  log(L("Sprache: ") .. neu, colors.yellow)
+  standSenden()
+  sleep(1)
+  os.reboot()
 end
 
 -- ---------- Hauptschleife ----------
-log("Gestartet", colors.lightGray)
+log(L("Gestartet"), colors.lightGray)
 zeigen()
 pruefen()
 zeigen()
@@ -350,6 +404,8 @@ while true do
     if a and anfrage(ev[2], a) and os.clock() - letztePruefung > 20 then jetztPruefen() end
   elseif ev[1] == "key" and ev[2] == keys.u then
     jetztPruefen()
+  elseif ev[1] == "key" and ev[2] == keys.s then
+    spracheWechseln()
   end
   local jetzt = os.clock()
   if jetzt >= naechstePruefung then jetztPruefen() jetzt = os.clock() end

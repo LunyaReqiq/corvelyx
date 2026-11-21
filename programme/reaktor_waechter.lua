@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // REAKTOR-WAECHTER  v1.3
+--  CORVELYX // REAKTOR-WAECHTER  v1.4
 --  Ueberwacht den Mekanism-Fission-Reaktor und loest
 --  bei kritischen Werten eine Notabschaltung (SCRAM) aus.
 --
@@ -39,6 +39,63 @@ local CFG = {
 }
 -- Einstellungen aus corvelyx.cfg (Update-System) uebernehmen
 if type(CORVELYX_CFG) == "table" then for k, v in pairs(CORVELYX_CFG) do CFG[k] = v end end
+-- Sprache (de/en) - wird vom Update-Computer fuers ganze Netz vorgegeben
+local EN = {
+  [" weitere)"] = " more)",
+  ["!! SCRAM AKTIV !!"] = "!! SCRAM ACTIVE !!",
+  ["AN"] = "ON",
+  ["AUS"] = "OFF",
+  ["Abgelehnt: "] = "Refused: ",
+  ["Abgelehnt: Kuehlmittel %.0f%%"] = "Refused: coolant %.0f%%",
+  ["Abgelehnt: SCRAM aktiv - Reset vor Ort"] = "Refused: SCRAM active - reset on site",
+  ["Abgelehnt: keine Reaktordaten"] = "Refused: no reactor data",
+  ["Abgelehnter Fernbefehl von PC #"] = "Refused remote command from PC #",
+  ["Atommuell %.0f%%"] = "Nuclear waste %.0f%%",
+  ["Atommuell:   %.0f%%"] = "Waste:       %.0f%%",
+  ["Brennstoff niedrig %.0f%%"] = "Fuel low %.0f%%",
+  ["Brennstoff:  %.0f%%"] = "Fuel:        %.0f%%",
+  ["Burn Rate:   %.1f / %.1f mB/t"] = "Burn rate:   %.1f / %.1f mB/t",
+  ["Fern-NOT-AUS von PC #"] = "Remote E-STOP from PC #",
+  ["Fern-Start von PC #"] = "Remote start from PC #",
+  ["Fern-Stopp von PC #"] = "Remote stop from PC #",
+  ["Funk: "] = "Radio: ",
+  ["Grund: "] = "Reason: ",
+  ["Heiss:       %.0f%%"] = "Heated:      %.0f%%",
+  ["Heisses Kuehlm. %.0f%%"] = "Heated coolant %.0f%%",
+  ["Kein Brennstoff - Reaktor steht"] = "No fuel - reactor idle",
+  ["Kein SCRAM aktiv."] = "No SCRAM active.",
+  ["Keine Reaktordaten!"] = "No reactor data!",
+  ["Kuehlmittel %.0f%%"] = "Coolant %.0f%%",
+  ["Kuehlmittel: %.0f%%"] = "Coolant:     %.0f%%",
+  ["NOT-AUS ausgefuehrt"] = "E-STOP executed",
+  ["Reaktor gestartet"] = "Reactor started",
+  ["Reaktor gestoppt"] = "Reactor stopped",
+  ["Reaktor ist bereits aus"] = "Reactor is already off",
+  ["Reaktor laeuft bereits"] = "Reactor already running",
+  ["Reaktor nicht geformt"] = "Reactor not formed",
+  ["Reaktor:     "] = "Reactor:     ",
+  ["Reaktor:     AN (steht, kein Brennstoff)"] = "Reactor:     ON (idle, no fuel)",
+  ["Reset abgelehnt: "] = "Reset refused: ",
+  ["Reset abgelehnt: keine Daten."] = "Reset refused: no data.",
+  ["Reset durch Bediener"] = "Reset by operator",
+  ["Reset ok. Reaktor manuell starten."] = "Reset ok. Start the reactor manually.",
+  ["Schaden %.2f"] = "Damage %.2f",
+  ["Schaden:     %.2f"] = "Damage:      %.2f",
+  ["Start fehlgeschlagen: "] = "Start failed: ",
+  ["TEST durch Bediener"] = "TEST by operator",
+  ["Temperatur %.0f K"] = "Temperature %.0f K",
+  ["Temperatur:  %.0f K"] = "Temperature: %.0f K",
+  ["Test-SCRAM ausgeloest."] = "Test SCRAM triggered.",
+  ["Verbindung verloren: "] = "Connection lost: ",
+  ["WARNUNG"] = "WARNING",
+  ["Waechter gestartet"] = "Guard started",
+  ["Zugriff verweigert"] = "Access denied",
+  ["[R] Reset   [T] Test-SCRAM"] = "[R] Reset   [T] Test SCRAM",
+  ["[Tag "] = "[Day ",
+  ["kein Ender Modem"] = "no Ender Modem",
+  ["kein Reaktor gefunden"] = "no reactor found",
+}
+local function L(s) if CFG.SPRACHE == "en" then return EN[s] or s end return s end
 CFG.PROTOKOLL = CFG.NETZ .. "/reaktor"
 
 -- ---------- Zustand ----------
@@ -57,7 +114,7 @@ local function log(text)
   local zeit = textutils.formatTime(os.time(), true)
   local f = fs.open(CFG.LOGDATEI, "a")
   if f then
-    f.writeLine("[Tag " .. os.day() .. " " .. zeit .. "] " .. text)
+    f.writeLine(L("[Tag ") .. os.day() .. " " .. zeit .. "] " .. text)
     f.close()
   end
 end
@@ -158,10 +215,10 @@ local function suchen()
 end
 
 local function lesen()
-  if not reaktor and not suchen() then error("kein Reaktor gefunden") end
+  if not reaktor and not suchen() then error(L("kein Reaktor gefunden")) end
   local r = reaktor
   local d = {}
-  if r.isFormed and not r.isFormed() then error("Reaktor nicht geformt") end
+  if r.isFormed and not r.isFormed() then error(L("Reaktor nicht geformt")) end
   d.aktiv    = r.getStatus()
   d.temp     = r.getTemperature()
   d.schaden  = r.getDamagePercent()
@@ -178,19 +235,19 @@ end
 -- Liefert Liste der SCRAM-Gruende und der Warnungen
 local function pruefen(d)
   local s, w = {}, {}
-  if d.schaden > 0 then s[#s+1] = string.format("Schaden %.2f", d.schaden) end
-  if d.temp >= CFG.TEMP_SCRAM then s[#s+1] = string.format("Temperatur %.0f K", d.temp)
-  elseif d.temp >= CFG.TEMP_WARN then w[#w+1] = string.format("Temperatur %.0f K", d.temp) end
-  if d.kuehl <= CFG.KUEHL_SCRAM then s[#s+1] = string.format("Kuehlmittel %.0f%%", d.kuehl * 100)
-  elseif d.kuehl <= CFG.KUEHL_WARN then w[#w+1] = string.format("Kuehlmittel %.0f%%", d.kuehl * 100) end
-  if d.heiss >= CFG.HEISS_SCRAM then s[#s+1] = string.format("Heisses Kuehlm. %.0f%%", d.heiss * 100)
-  elseif d.heiss >= CFG.HEISS_WARN then w[#w+1] = string.format("Heisses Kuehlm. %.0f%%", d.heiss * 100) end
-  if d.muell >= CFG.MUELL_SCRAM then s[#s+1] = string.format("Atommuell %.0f%%", d.muell * 100)
-  elseif d.muell >= CFG.MUELL_WARN then w[#w+1] = string.format("Atommuell %.0f%%", d.muell * 100) end
+  if d.schaden > 0 then s[#s+1] = string.format(L("Schaden %.2f"), d.schaden) end
+  if d.temp >= CFG.TEMP_SCRAM then s[#s+1] = string.format(L("Temperatur %.0f K"), d.temp)
+  elseif d.temp >= CFG.TEMP_WARN then w[#w+1] = string.format(L("Temperatur %.0f K"), d.temp) end
+  if d.kuehl <= CFG.KUEHL_SCRAM then s[#s+1] = string.format(L("Kuehlmittel %.0f%%"), d.kuehl * 100)
+  elseif d.kuehl <= CFG.KUEHL_WARN then w[#w+1] = string.format(L("Kuehlmittel %.0f%%"), d.kuehl * 100) end
+  if d.heiss >= CFG.HEISS_SCRAM then s[#s+1] = string.format(L("Heisses Kuehlm. %.0f%%"), d.heiss * 100)
+  elseif d.heiss >= CFG.HEISS_WARN then w[#w+1] = string.format(L("Heisses Kuehlm. %.0f%%"), d.heiss * 100) end
+  if d.muell >= CFG.MUELL_SCRAM then s[#s+1] = string.format(L("Atommuell %.0f%%"), d.muell * 100)
+  elseif d.muell >= CFG.MUELL_WARN then w[#w+1] = string.format(L("Atommuell %.0f%%"), d.muell * 100) end
   -- Brennstoff: nur relevant, wenn der Reaktor eingeschaltet ist
   if d.aktiv then
-    if d.brenn <= 0.001 then w[#w+1] = "Kein Brennstoff - Reaktor steht"
-    elseif d.brenn <= CFG.BRENN_WARN then w[#w+1] = string.format("Brennstoff niedrig %.0f%%", d.brenn * 100) end
+    if d.brenn <= 0.001 then w[#w+1] = L("Kein Brennstoff - Reaktor steht")
+    elseif d.brenn <= CFG.BRENN_WARN then w[#w+1] = string.format(L("Brennstoff niedrig %.0f%%"), d.brenn * 100) end
   end
   return s, w
 end
@@ -207,24 +264,24 @@ local function scram(grund)
   if not gesperrt then
     gesperrt = true
     scramGrund = grund
-    log("SCRAM: " .. grund)
+    log(L("SCRAM: ") .. grund)
   end
 end
 
 local function reset()
-  if not gesperrt then meldung = "Kein SCRAM aktiv." return end
+  if not gesperrt then meldung = L("Kein SCRAM aktiv.") return end
   local ok, d = pcall(lesen)
-  if not ok then meldung = "Reset abgelehnt: keine Daten." return end
+  if not ok then meldung = L("Reset abgelehnt: keine Daten.") return end
   local s = pruefen(d)
   if #s > 0 then
-    meldung = "Reset abgelehnt: " .. s[1]
+    meldung = L("Reset abgelehnt: ") .. s[1]
     return
   end
   gesperrt = false
   scramGrund = ""
   redstoneNormal()
-  log("Reset durch Bediener")
-  meldung = "Reset ok. Reaktor manuell starten."
+  log(L("Reset durch Bediener"))
+  meldung = L("Reset ok. Reaktor manuell starten.")
 end
 
 -- ---------- Anzeige ----------
@@ -241,37 +298,37 @@ local function zeichnen()
   zeile(1, "CORVELYX // REAKTOR-WAECHTER", colors.cyan)
 
   if gesperrt then
-    zeile(3, "!! SCRAM AKTIV !!", colors.red)
-    zeile(4, "Grund: " .. scramGrund, colors.red)
+    zeile(3, L("!! SCRAM AKTIV !!"), colors.red)
+    zeile(4, L("Grund: ") .. scramGrund, colors.red)
   elseif #warnungen > 0 then
-    local mehr = #warnungen > 1 and ("  (+" .. (#warnungen - 1) .. " weitere)") or ""
-    zeile(3, "WARNUNG" .. mehr, colors.orange)
+    local mehr = #warnungen > 1 and ("  (+" .. (#warnungen - 1) .. L(" weitere)")) or ""
+    zeile(3, L("WARNUNG") .. mehr, colors.orange)
     zeile(4, warnungen[1], colors.orange)
   else
-    zeile(3, "Status: OK", colors.lime)
+    zeile(3, L("Status: OK"), colors.lime)
   end
 
   if daten then
     local d = daten
     if d.aktiv and d.burnIst <= 0 and d.brenn <= 0.001 then
-      zeile(6, "Reaktor:     AN (steht, kein Brennstoff)", colors.orange)
+      zeile(6, L("Reaktor:     AN (steht, kein Brennstoff)"), colors.orange)
     else
-      zeile(6, "Reaktor:     " .. (d.aktiv and "AN" or "AUS"), d.aktiv and colors.lime or colors.lightGray)
+      zeile(6, L("Reaktor:     ") .. (d.aktiv and L("AN") or L("AUS")), d.aktiv and colors.lime or colors.lightGray)
     end
-    zeile(7,  string.format("Temperatur:  %.0f K", d.temp))
-    zeile(8,  string.format("Schaden:     %.2f", d.schaden))
-    zeile(9,  string.format("Kuehlmittel: %.0f%%", d.kuehl * 100))
-    zeile(10, string.format("Heiss:       %.0f%%", d.heiss * 100))
-    zeile(11, string.format("Atommuell:   %.0f%%", d.muell * 100))
-    zeile(12, string.format("Brennstoff:  %.0f%%", d.brenn * 100))
-    zeile(13, string.format("Burn Rate:   %.1f / %.1f mB/t", d.burnIst, d.burn))
+    zeile(7,  string.format(L("Temperatur:  %.0f K"), d.temp))
+    zeile(8,  string.format(L("Schaden:     %.2f"), d.schaden))
+    zeile(9,  string.format(L("Kuehlmittel: %.0f%%"), d.kuehl * 100))
+    zeile(10, string.format(L("Heiss:       %.0f%%"), d.heiss * 100))
+    zeile(11, string.format(L("Atommuell:   %.0f%%"), d.muell * 100))
+    zeile(12, string.format(L("Brennstoff:  %.0f%%"), d.brenn * 100))
+    zeile(13, string.format(L("Burn Rate:   %.1f / %.1f mB/t"), d.burnIst, d.burn))
   else
-    zeile(6, "Keine Reaktordaten!", colors.red)
+    zeile(6, L("Keine Reaktordaten!"), colors.red)
   end
 
-  zeile(15, "Funk: " .. (funkAktiv and "an" or "kein Ender Modem"), colors.gray)
+  zeile(15, L("Funk: ") .. (funkAktiv and (L("AN")):lower() or L("kein Ender Modem")), colors.gray)
   zeile(16, meldung, colors.yellow)
-  zeile(18, "[R] Reset   [T] Test-SCRAM", colors.lightGray)
+  zeile(18, L("[R] Reset   [T] Test-SCRAM"), colors.lightGray)
 end
 
 -- ---------- Schleifen ----------
@@ -300,7 +357,7 @@ local function ueberwachung()
       reaktor = nil
       daten = nil
       if fehlerFolge >= CFG.MAX_FEHLER then
-        scram("Verbindung verloren: " .. tostring(d))
+        scram(L("Verbindung verloren: ") .. tostring(d))
       end
     end
 
@@ -324,8 +381,8 @@ local function tastatur()
     if taste == keys.r then
       reset()
     elseif taste == keys.t then
-      scram("TEST durch Bediener")
-      meldung = "Test-SCRAM ausgeloest."
+      scram(L("TEST durch Bediener"))
+      meldung = L("Test-SCRAM ausgeloest.")
     end
   end
 end
@@ -359,45 +416,45 @@ local function befehl(id, msg)
 
   local erwartet = sha256(CFG.PASSWORT .. "|" .. msg.befehl .. "|" .. msg.nonce)
   if not nonceEinloesen(msg.nonce) or msg.sig ~= erwartet then
-    log("Abgelehnter Fernbefehl von PC #" .. id)
-    antwort(false, "Zugriff verweigert")
+    log(L("Abgelehnter Fernbefehl von PC #") .. id)
+    antwort(false, L("Zugriff verweigert"))
     return
   end
 
   if msg.befehl == "notaus" then
-    scram("Fern-NOT-AUS von PC #" .. id)
-    antwort(true, "NOT-AUS ausgefuehrt")
+    scram(L("Fern-NOT-AUS von PC #") .. id)
+    antwort(true, L("NOT-AUS ausgefuehrt"))
 
   elseif msg.befehl == "stop" then
     if reaktor and daten and daten.aktiv then
       pcall(reaktor.scram)
-      log("Fern-Stopp von PC #" .. id)
-      antwort(true, "Reaktor gestoppt")
+      log(L("Fern-Stopp von PC #") .. id)
+      antwort(true, L("Reaktor gestoppt"))
     else
-      antwort(false, "Reaktor ist bereits aus")
+      antwort(false, L("Reaktor ist bereits aus"))
     end
 
   elseif msg.befehl == "start" then
     if gesperrt then
-      antwort(false, "Abgelehnt: SCRAM aktiv - Reset vor Ort")
+      antwort(false, L("Abgelehnt: SCRAM aktiv - Reset vor Ort"))
       return
     end
     local ok, d = pcall(lesen)
-    if not ok then antwort(false, "Abgelehnt: keine Reaktordaten") return end
+    if not ok then antwort(false, L("Abgelehnt: keine Reaktordaten")) return end
     local s = pruefen(d)
-    if #s > 0 then antwort(false, "Abgelehnt: " .. s[1]) return end
+    if #s > 0 then antwort(false, L("Abgelehnt: ") .. s[1]) return end
     if d.kuehl < CFG.KUEHL_WARN then
-      antwort(false, string.format("Abgelehnt: Kuehlmittel %.0f%%", d.kuehl * 100))
+      antwort(false, string.format(L("Abgelehnt: Kuehlmittel %.0f%%"), d.kuehl * 100))
       return
     end
-    if d.aktiv then antwort(false, "Reaktor laeuft bereits") return end
+    if d.aktiv then antwort(false, L("Reaktor laeuft bereits")) return end
     local ok2, err = pcall(reaktor.activate)
     if ok2 then
-      log("Fern-Start von PC #" .. id)
-      meldung = "Fern-Start von PC #" .. id
-      antwort(true, "Reaktor gestartet")
+      log(L("Fern-Start von PC #") .. id)
+      meldung = L("Fern-Start von PC #") .. id
+      antwort(true, L("Reaktor gestartet"))
     else
-      antwort(false, "Start fehlgeschlagen: " .. tostring(err))
+      antwort(false, L("Start fehlgeschlagen: ") .. tostring(err))
     end
   end
 end
@@ -433,6 +490,6 @@ local function funk()
 end
 
 -- ---------- Start ----------
-log("Waechter gestartet")
+log(L("Waechter gestartet"))
 redstoneNormal()
 parallel.waitForAny(ueberwachung, tastatur, funk)

@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // CONTROL CENTER  v3.9
+--  CORVELYX // CONTROL CENTER  v4.0  (Deutsch / English)
 --
 --  Aufbau:
 --   - Advanced Computer mit Ender Modem
@@ -52,6 +52,266 @@ local CFG = {
 }
 -- Einstellungen aus corvelyx.cfg (Update-System) uebernehmen
 if type(CORVELYX_CFG) == "table" then for k, v in pairs(CORVELYX_CFG) do CFG[k] = v end end
+-- Sprache (de/en) - wird vom Update-Computer fuers ganze Netz vorgegeben
+local EN = {
+  ["   (nur Spieler au\223erhalb des Teams)"] = "   (only players outside the team)",
+  ["   Gesamt: "] = "   Total: ",
+  ["  AN  "] = "  ON  ",
+  [" % drin  ("] = " % inserted  (",
+  [" (Z\220NDUNG)"] = " (IGNITION)",
+  [" ALARME"] = " ALARMS",
+  [" AUS  "] = " OFF  ",
+  [" Bytes  ("] = " bytes  (",
+  [" Drawer fast voll"] = " drawer(s) almost full",
+  [" GEZ\220NDET"] = " IGNITED",
+  [" LAUFEN"] = " RUNNING",
+  [" MATRIZEN)"] = " MATRICES)",
+  [" Programme - geprueft vor "] = " programs - checked ",
+  [" Spieler"] = " players",
+  [" TURBINEN)"] = " TURBINES)",
+  [" Uhr"] = "",
+  [" VON "] = " OF ",
+  [" aktiv / "] = " active / ",
+  [" braucht ein Update"] = " needs an update",
+  [" entfernt (keine Daten mehr)"] = " removed (no more data)",
+  [" min"] = " min ago",
+  [" min): "] = " min ago): ",
+  [" verworfen"] = " discarded",
+  ["%.0f C  (Gehaeuse %.0f C)"] = "%.0f C  (casing %.0f C)",
+  ["%.1f Tage"] = "%.1f days",
+  [": Brennstoff niedrig "] = ": fuel low ",
+  [": D-T-Brennstoff niedrig "] = ": D-T fuel low ",
+  [": Dampfstau "] = ": steam backing up ",
+  [": Fusion erloschen"] = ": fusion went out",
+  [": keine Daten"] = ": no data",
+  ["< ZURUECK"] = "< BACK",
+  ["ABBRECHEN (Signal aus)"] = "CANCEL (signal off)",
+  ["ABEND"] = "EVENING",
+  ["ABFALL AUSWERFEN"] = "EJECT WASTE",
+  ["AKTIVE ALARME ("] = "ACTIVE ALARMS (",
+  ["AN"] = "ON",
+  ["AN - Farmen laufen"] = "ON - farms running",
+  ["AN - STEHT"] = "ON - IDLE",
+  ["AUS"] = "OFF",
+  ["AUS - Farmen gestoppt"] = "OFF - farms stopped",
+  ["AUSSCHALTEN"] = "TURN OFF",
+  ["Abfall"] = "Waste",
+  ["Alles in Ordnung."] = "All good.",
+  ["Atommuell"] = "Nuclear waste",
+  ["Ausgang"] = "Output",
+  ["Auto-Z\252ndung"] = "Auto ignition",
+  ["Automatik"] = "Automatic",
+  ["BESUCHER"] = "VISITORS",
+  ["BETRETUNGSLOG"] = "ENTRY LOG",
+  ["Befehl an "] = "Command to ",
+  ["Befehl an Reaktor: "] = "Command to reactor: ",
+  ["Behoben: "] = "Resolved: ",
+  ["Bereit zum Z\252nden"] = "Ready to ignite",
+  ["Besucher: "] = "Visitor: ",
+  ["Bilanz"] = "Balance",
+  ["Biom"] = "Biome",
+  ["Brennstoff"] = "Fuel",
+  ["Brennstoff min: "] = "Fuel min: ",
+  ["Burn Rate"] = "Burn rate",
+  ["Chat Box gefunden - CHAT_TEAM in corvelyx.cfg eintragen"] = "Chat Box found - set CHAT_TEAM in corvelyx.cfg",
+  ["Chat-Alarme aktiv f\252r "] = "Chat alarms active for ",
+  ["Chemical-Speicher"] = "Chemical storage",
+  ["Computer"] = "computer",
+  ["Control Center gestartet"] = "Control Center started",
+  ["D-T-Brennstoff"] = "D-T fuel",
+  ["DATUM"] = "DATE",
+  ["Dafuer ist kein Manipulator verbaut"] = "No manipulator installed for this",
+  ["Dampf"] = "Steam",
+  ["Dampf im Tank"] = "Steam in tank",
+  ["Dampf max: "] = "Steam max: ",
+  ["Dampf-Produktion"] = "Steam production",
+  ["Dampffluss"] = "Steam flow",
+  ["Der Server l\228uft gerade langsam (%.1f TPS) - es kann laggen."] = "The server is running slow right now (%.1f TPS) - expect some lag.",
+  ["Der Server l\228uft wieder normal (%.1f TPS)."] = "The server is running normally again (%.1f TPS).",
+  ["EINSCHALTEN"] = "TURN ON",
+  ["EREIGNISPROTOKOLL"] = "EVENT LOG",
+  ["Eingang"] = "Input",
+  ["Energiepuffer"] = "Energy buffer",
+  ["Energiespeicher"] = "Energy storage",
+  ["FEHLER"] = "ERROR",
+  ["FEHLT"] = "MISSING",
+  ["FLUX-NETZ"] = "FLUX NETWORK",
+  ["FUSIONSREAKTOR"] = "FUSION REACTOR",
+  ["Faecher belegt"] = "Slots used",
+  ["Fast voll"] = "Almost full",
+  ["Fehler: "] = "Error: ",
+  ["Fission wirklich STARTEN?"] = "Really START fission?",
+  ["Fission-Waechter"] = "Fission guard",
+  ["Fission-Waechter: keine Verbindung"] = "Fission guard: no connection",
+  ["Fluid-Speicher"] = "Fluid storage",
+  ["Flux-Sender"] = "Flux sender",
+  ["Fusion erlischt!"] = "Fusion will go out!",
+  ["Fusion-PC braucht Update"] = "Fusion PC needs an update",
+  ["GESAMT"] = "TOTAL",
+  ["GESAMT ("] = "TOTAL (",
+  ["GEWITTER"] = "THUNDER",
+  ["GEZ\220NDET"] = "IGNITED",
+  ["Gehaeuse"] = "Casing",
+  ["Gesamt "] = "Total ",
+  ["Gesamt-Eingang"] = "Total input",
+  ["Gesendet ..."] = "Sent ...",
+  ["Gesendet: "] = "Sent: ",
+  ["Gewitter -> klar"] = "Thunder -> clear",
+  ["Hauptmonitor: "] = "Main monitor: ",
+  ["Heute: "] = "Today: ",
+  ["Himmelslicht"] = "Sky light",
+  ["Hinweis: NETZ und PASSWORT eintragen!"] = "Note: set NETZ and PASSWORT!",
+  ["In Zusammenarbeit mit den beiden wundervollsten Menschen: Annie & Emi "] = "Made together with the two most wonderful people: Annie & Emi ",
+  ["Injection Rate"] = "Injection rate",
+  ["Item-Speicher"] = "Item storage",
+  ["Items gesamt"] = "Items total",
+  ["JA"] = "YES",
+  ["JA, STOPP"] = "YES, STOP",
+  ["JA, Z\220NDEN"] = "YES, IGNITE",
+  ["KEINE DATEN"] = "NO DATA",
+  ["KEINE VERBINDUNG"] = "NO CONNECTION",
+  ["KEINE WERTE"] = "NO VALUES",
+  ["KLAR"] = "CLEAR",
+  ["KRITISCH: "] = "CRITICAL: ",
+  ["Kein Ender Modem gefunden!"] = "No Ender Modem found!",
+  ["Kein Hohlraum im Reaktor!"] = "No hohlraum in the reactor!",
+  ["Kein Kontakt zu "] = "No contact to ",
+  ["Kein Kontakt zum Reaktor"] = "No contact to the reactor",
+  ["Kein Kontakt zum Waechter"] = "No contact to the guard",
+  ["Kein Kontakt zum Wetter-PC"] = "No contact to the weather PC",
+  ["Kein Laser-Computer f\252r "] = "No laser computer for ",
+  ["Kein Monitor gefunden!"] = "No monitor found!",
+  ["Keine Daten vom ME-Sender."] = "No data from the ME sender.",
+  ["Keine Daten vom Wetter-PC."] = "No data from the weather PC.",
+  ["Keine Daten von Fusion-Reaktoren."] = "No data from fusion reactors.",
+  ["Keine Daten von Turbinen-Sendern."] = "No data from turbine senders.",
+  ["Keine Daten von Xtreme-Reaktoren."] = "No data from Extreme reactors.",
+  ["Keine Daten."] = "No data.",
+  ["Keine Verbindung zum Waechter."] = "No connection to the guard.",
+  ["Keine aktuellen Daten von den Matrix-Sendern."] = "No current data from the matrix senders.",
+  ["Keine aktuellen Daten."] = "No current data.",
+  ["Kuehlmittel"] = "Coolant",
+  ["LAEUFT"] = "RUNNING",
+  ["LAGER"] = "STORAGE",
+  ["LAGER (FUNCTIONAL STORAGE)"] = "STORAGE (FUNCTIONAL STORAGE)",
+  ["LOG LEEREN"] = "CLEAR LOG",
+  ["L\228dt ..."] = "Charging ...",
+  ["Lager"] = "Storage",
+  ["Laser: keine Verbindung"] = "Laser: no connection",
+  ["Leer in"] = "Empty in",
+  ["Leistung"] = "Output",
+  ["Leistung: "] = "Output: ",
+  ["MATRIZEN"] = "MATRICES",
+  ["ME-Chemicals fast voll: "] = "ME chemicals almost full: ",
+  ["ME-Fluids fast voll: "] = "ME fluids almost full: ",
+  ["ME-Items fast voll: "] = "ME items almost full: ",
+  ["ME-SYSTEM"] = "ME SYSTEM",
+  ["ME-System"] = "ME system",
+  ["ME-System: keine Daten"] = "ME system: no data",
+  ["MENGE"] = "AMOUNT",
+  ["MESSWERTE"] = "READINGS",
+  ["MESSWERTE - "] = "READINGS - ",
+  ["MITTAG"] = "NOON",
+  ["MOBFARM"] = "MOB FARM",
+  ["MOEGLICH"] = "POSSIBLE",
+  ["MORGEN"] = "MORNING",
+  ["Matrix (fuer Automatik)"] = "Matrix (for automatic)",
+  ["Menue: "] = "Menu: ",
+  ["Mit Annie & Emi "] = "With Annie & Emi ",
+  ["Mobfarm"] = "Mob farm",
+  ["Mond"] = "Moon",
+  ["Monster-Spawn draussen"] = "Monster spawning outside",
+  ["NACHT"] = "NIGHT",
+  ["NEIN"] = "NO",
+  ["NICHT GEZ\220NDET"] = "NOT IGNITED",
+  ["NOT-AUS"] = "E-STOP",
+  ["Nacht beginnt in"] = "Night starts in",
+  ["Nacht ueberspringen"] = "Skip the night",
+  ["Netto"] = "Net",
+  ["Netz: "] = "Network: ",
+  ["Noch keine Anlagen gemeldet - Sender gestartet?"] = "No systems reported yet - are the senders running?",
+  ["Noch keine Daten vom Lager-Sender."] = "No data from the storage sender yet.",
+  ["Noch keine Daten von Flux-Sendern."] = "No data from flux senders yet.",
+  ["Noch keine Eintraege."] = "No entries yet.",
+  ["Noch niemand Fremdes ist durch die T\252r gegangen."] = "No outsider has come through the door yet.",
+  ["ORT"] = "PLACE",
+  ["PRODUZIERT"] = "PRODUCING",
+  ["Produktion"] = "Production",
+  ["Pruefe GitHub ..."] = "Checking GitHub ...",
+  ["Puffer voll!"] = "Buffer full!",
+  ["REGEN"] = "RAIN",
+  ["Raus: "] = "Out: ",
+  ["Reaktivitaet"] = "Reactivity",
+  ["Reaktor-PC braucht Update"] = "Reactor PC needs an update",
+  ["Regen -> klar"] = "Rain -> clear",
+  ["Rein: "] = "In: ",
+  ["Reset nur vor Ort (Taste R)"] = "Reset only on site (key R)",
+  ["SORT: FUELLSTAND"] = "SORT: FILL",
+  ["SORT: LEISTUNG"] = "SORT: OUTPUT",
+  ["SORT: MENGE"] = "SORT: AMOUNT",
+  ["SORT: ORT/NAME"] = "SORT: PLACE/NAME",
+  ["SPIELER"] = "PLAYER",
+  ["STEUERUNG"] = "CONTROL",
+  ["STILL"] = "IDLE",
+  ["STOPP (Injection 0)"] = "STOP (injection 0)",
+  ["Sammle Daten ..."] = "Collecting data ...",
+  ["Schaden"] = "Damage",
+  ["Seit "] = "Since ",
+  ["Seite "] = "Page ",
+  ["Server langsam: %.1f TPS (an alle gemeldet)"] = "Server slow: %.1f TPS (announced to all)",
+  ["Server wieder normal: %.1f TPS"] = "Server back to normal: %.1f TPS",
+  ["Signal AN - Laser feuert ..."] = "Signal ON - laser firing ...",
+  ["Signal aus (gez\252ndet)"] = "Signal off (ignited)",
+  ["Startet ..."] = "Starting ...",
+  ["Steuerstaebe"] = "Control rods",
+  ["Strg+T = Beenden"] = "Ctrl+T = quit",
+  ["Strom niedrig (alle Matrizen): "] = "Power low (all matrices): ",
+  ["TAG"] = "DAY",
+  ["TURBINEN"] = "TURBINES",
+  ["TURBINEN ("] = "TURBINES (",
+  ["Tag "] = "Day ",
+  ["Tag beginnt in"] = "Day starts in",
+  ["Temperatur"] = "Temperature",
+  ["UEBERSICHT"] = "OVERVIEW",
+  ["UHRZEIT"] = "TIME",
+  ["Uhrzeit"] = "Time",
+  ["Ungueltige Nachricht von PC #"] = "Invalid message from PC #",
+  ["Update verteilt: "] = "Update distributed: ",
+  ["Update-Computer"] = "Update computer",
+  ["Update-Computer: "] = "Update computer: ",
+  ["Update-Computer: keine Verbindung"] = "Update computer: no connection",
+  ["Update-Pruefung angefordert"] = "Update check requested",
+  ["VERLAUF "] = "HISTORY ",
+  ["VERLAUF GESAMT"] = "TOTAL HISTORY",
+  ["VON"] = "OF",
+  ["Verbrauch"] = "Consumption",
+  ["Voll in"] = "Full in",
+  ["Vollmondnacht: mehr Monster!"] = "Full moon night: more monsters!",
+  ["WEITER >"] = "NEXT >",
+  ["WETTER"] = "WEATHER",
+  ["Waechter braucht Update (v1.2)"] = "Guard needs an update (v1.2)",
+  ["Waechter liefert keine Werte."] = "Guard sends no values.",
+  ["Waechter: "] = "Guard: ",
+  ["Wetter"] = "Weather",
+  ["Wetter-PC"] = "Weather PC",
+  ["Wetter-PC braucht Update (v3)"] = "Weather PC needs an update (v3)",
+  ["Wetter-PC: "] = "Weather PC: ",
+  ["Wetter-PC: keine Daten"] = "Weather PC: no data",
+  ["Wird gesendet ..."] = "Sending ...",
+  ["Wirklich l\246schen?"] = "Really delete?",
+  ["ZEIT & WETTER"] = "TIME & WEATHER",
+  ["Z\220NDEN"] = "IGNITE",
+  ["Z\220NDEN (Hohlraum fehlt)"] = "IGNITE (no hohlraum)",
+  ["Z\220NDEN (wartet auf Ladung)"] = "IGNITE (waiting for charge)",
+  ["Zeichenfehler: "] = "Drawing error: ",
+  ["Zuletzt (vor "] = "Last (",
+  ["[Tag "] = "[Day ",
+  ["aktiv gekuehlt"] = "actively cooled",
+  ["keine Daten"] = "no data",
+  ["keins - Leiste oben"] = "none - bar at the top",
+  ["passiv"] = "passive",
+}
+local function L(s) if CFG.SPRACHE == "en" then return EN[s] or s end return s end
 CFG.PROT_REAKTOR = CFG.NETZ .. "/reaktor"
 CFG.PROT_DATEN   = CFG.NETZ .. "/daten"
 CFG.PROT_WETTER  = CFG.NETZ .. "/wetter"
@@ -160,11 +420,11 @@ end
 
 -- ---------- Peripherie ----------
 local modem = peripheral.find("modem", function(_, m) return m.isWireless() end)
-if not modem then error("Kein Ender Modem gefunden!") end
+if not modem then error(L("Kein Ender Modem gefunden!")) end
 rednet.open(peripheral.getName(modem))
 
 local monitore = { peripheral.find("monitor") }
-if #monitore == 0 then error("Kein Monitor gefunden!") end
+if #monitore == 0 then error(L("Kein Monitor gefunden!")) end
 for _, m in ipairs(monitore) do m.setTextScale(1) end
 table.sort(monitore, function(a, b)
   local aw, ah = a.getSize()
@@ -233,19 +493,19 @@ local blink        = false
 local startZeit    = os.clock()
 
 local SEITEN = {
-  { id = "uebersicht", name = "UEBERSICHT", kurz = "HOME" },
-  { id = "energie",    name = "MATRIX", kurz = "MATRIX" },
-  { id = "reaktor",    name = "FISSION", kurz = "FISS." },
-  { id = "xtreme",     name = "XTREME" },
-  { id = "fusion",     name = "FUSION" },
-  { id = "turbine",    name = "TURBINE", kurz = "TURB." },
-  { id = "me",         name = "ME-SYSTEM", kurz = "ME" },
-  { id = "wetter",     name = "WETTER" },
-  { id = "flux",       name = "FLUX" },
-  { id = "lager",      name = "LAGER" },
-  { id = "mobfarm",    name = "MOBFARM", kurz = "MOBS" },
-  { id = "besucher",   name = "BESUCHER", kurz = "T\220R" },
-  { id = "log",        name = "LOG" },
+  { id = "uebersicht", name = L("UEBERSICHT"), kurz = L("HOME") },
+  { id = "energie",    name = L("MATRIX"), kurz = L("MATRIX") },
+  { id = "reaktor",    name = L("FISSION"), kurz = L("FISS.") },
+  { id = "xtreme",     name = L("XTREME"), ken = "XTR." },
+  { id = "fusion",     name = L("FUSION"), ken = "FUS." },
+  { id = "turbine",    name = L("TURBINE"), kurz = L("TURB.") },
+  { id = "me",         name = L("ME-SYSTEM"), kurz = L("ME") },
+  { id = "wetter",     name = L("WETTER"), ken = "WTHR" },
+  { id = "flux",       name = L("FLUX") },
+  { id = "lager",      name = L("LAGER"), ken = "STOR." },
+  { id = "mobfarm",    name = L("MOBFARM"), kurz = L("MOBS") },
+  { id = "besucher",   name = L("BESUCHER"), kurz = "T\220R", ken = "DOOR" },
+  { id = "log",        name = L("LOG") },
 }
 
 -- ---------- Hilfsfunktionen ----------
@@ -268,7 +528,7 @@ end
 
 local function dauer(s)
   if type(s) ~= "number" or s ~= s or s == math.huge or s < 0 then return "--" end
-  if s >= 86400 then return string.format("%.1f Tage", s / 86400) end
+  if s >= 86400 then return string.format(L("%.1f Tage"), s / 86400) end
   if s >= 3600 then return string.format("%dh %02dm", math.floor(s / 3600), math.floor(s % 3600 / 60)) end
   if s >= 60 then return string.format("%dm %02ds", math.floor(s / 60), math.floor(s % 60)) end
   return string.format("%ds", math.floor(s))
@@ -289,7 +549,7 @@ local function log(text, farbe)
   table.insert(logListe, 1, { zeit = zeit, text = text, farbe = farbe or colors.white })
   if #logListe > 200 then table.remove(logListe) end
   local f = fs.open(CFG.LOGDATEI, "a")
-  if f then f.writeLine("[Tag " .. os.day() .. " " .. zeit .. "] " .. text) f.close() end
+  if f then f.writeLine(L("[Tag ") .. os.day() .. " " .. zeit .. "] " .. text) f.close() end
 end
 
 local function melden(text, farbe)
@@ -420,14 +680,14 @@ end
 -- ---------- Daten der Quellen ----------
 local function reaktorInfo()
   local q = quellen.reaktor
-  if not frisch("reaktor") then return nil, "KEINE DATEN", colors.lightGray end
+  if not frisch("reaktor") then return nil, L("KEINE DATEN"), colors.lightGray end
   local st = q.daten
   local d = st.daten
-  if st.scram then return st, "SCRAM", colors.red end
-  if not d then return st, "KEINE WERTE", colors.orange end
-  if d.aktiv and (d.burnIst or 0) <= 0 then return st, "AN - STEHT", colors.orange end
-  if d.aktiv then return st, "LAEUFT", colors.lime end
-  return st, "AUS", colors.lightGray
+  if st.scram then return st, L("SCRAM"), colors.red end
+  if not d then return st, L("KEINE WERTE"), colors.orange end
+  if d.aktiv and (d.burnIst or 0) <= 0 then return st, L("AN - STEHT"), colors.orange end
+  if d.aktiv then return st, L("LAEUFT"), colors.lime end
+  return st, L("AUS"), colors.lightGray
 end
 
 -- Alle Matrizen, natuerlich sortiert ("Matrix 2" vor "Matrix 10")
@@ -496,9 +756,9 @@ local function wetterDaten()
 end
 local function wetterText(w)
   if not w then return "--", colors.lightGray end
-  if w.gewitter then return "GEWITTER", colors.red end
-  if w.regen then return "REGEN", colors.cyan end
-  return "KLAR", colors.lime
+  if w.gewitter then return L("GEWITTER"), colors.red end
+  if w.regen then return L("REGEN"), colors.cyan end
+  return L("KLAR"), colors.lime
 end
 local function meDaten()
   if not frisch("me") or quellen.me.daten.fehler then return nil end
@@ -507,32 +767,32 @@ end
 
 -- ---------- Abgebaute Anlagen vergessen ----------
 -- Was VERGESSEN Sekunden lang nichts sendet, gilt als abgebaut.
-local NAMEN_QUELLEN = { reaktor = "Fission-Waechter", me = "ME-System", wetter = "Wetter-PC", update = "Update-Computer" }
+local NAMEN_QUELLEN = { reaktor = L("Fission-Waechter"), me = L("ME-System"), wetter = L("Wetter-PC"), update = L("Update-Computer") }
 local function aufraeumen()
   local jetzt = os.clock()
   for q, e in pairs(quellen) do
     if e.zeit and jetzt - e.zeit > CFG.VERGESSEN then
       quellen[q] = {}
-      log((NAMEN_QUELLEN[q] or q) .. " entfernt (keine Daten mehr)", colors.lightGray)
+      log((NAMEN_QUELLEN[q] or q) .. L(" entfernt (keine Daten mehr)"), colors.lightGray)
     end
   end
   local function tabelle(t, art)
     for key, e in pairs(t) do
       if e.zeit and jetzt - e.zeit > CFG.VERGESSEN then
         t[key] = nil
-        log(tostring(e.name or e.ort or art) .. " entfernt (keine Daten mehr)", colors.lightGray)
+        log(tostring(e.name or e.ort or art) .. L(" entfernt (keine Daten mehr)"), colors.lightGray)
       end
     end
   end
-  tabelle(turbinen, "Turbine")
-  tabelle(matrizen, "Matrix")
-  tabelle(fluxSender, "Flux-Sender")
-  tabelle(lagerSender, "Lager")
+  tabelle(turbinen, L("Turbine"))
+  tabelle(matrizen, L("Matrix"))
+  tabelle(fluxSender, L("Flux-Sender"))
+  tabelle(lagerSender, L("Lager"))
   tabelle(tueren, "T\252r")
-  tabelle(mobfarmen, "Mobfarm")
-  tabelle(laser, "Laser")
-  tabelle(xtreme, "Xtreme")
-  tabelle(fusion, "Fusion")
+  tabelle(mobfarmen, L("Mobfarm"))
+  tabelle(laser, L("Laser"))
+  tabelle(xtreme, L("Xtreme"))
+  tabelle(fusion, L("Fusion"))
 end
 
 -- Welche Seiten gibt es gerade? (nur Anlagen, die gesendet haben)
@@ -578,14 +838,14 @@ local function chatAlarm(id, text, stufe)
   if chatZuletzt[id] and os.clock() - chatZuletzt[id] < CFG.CHAT_PAUSE then return end
   chatZuletzt[id] = os.clock()
   chatGemeldet[id] = true
-  chatWarteschlange[#chatWarteschlange + 1] = { text = (stufe == 2 and "KRITISCH: " or "Alarm: ") .. text,
+  chatWarteschlange[#chatWarteschlange + 1] = { text = (stufe == 2 and L("KRITISCH: ") or L("Alarm: ")) .. text,
     farbe = stufe == 2 and "red" or "gold" }
 end
 local function chatBehoben(id, text)
   if not chatGemeldet[id] then return end
   chatGemeldet[id] = nil
   if CFG.CHAT_BEHOBEN and #chatTeam() > 0 then
-    chatWarteschlange[#chatWarteschlange + 1] = { text = "Behoben: " .. text, farbe = "green" }
+    chatWarteschlange[#chatWarteschlange + 1] = { text = L("Behoben: ") .. text, farbe = "green" }
   end
 end
 -- ---------- TPS messen ----------
@@ -608,9 +868,9 @@ local function tpsMessen()
     if not tps.gemeldet and jetzt - tps.schlechtSeit >= CFG.TPS_DAUER
        and (not tps.letzte or jetzt - tps.letzte >= CFG.TPS_PAUSE) then
       tps.gemeldet, tps.letzte = true, jetzt
-      log(string.format("Server langsam: %.1f TPS (an alle gemeldet)", tps.wert), colors.orange)
+      log(string.format(L("Server langsam: %.1f TPS (an alle gemeldet)"), tps.wert), colors.orange)
       chatWarteschlange[#chatWarteschlange + 1] = { alle = true, farbe = "gold",
-        text = string.format("Der Server l\228uft gerade langsam (%.1f TPS) - es kann laggen.", tps.wert) }
+        text = string.format(L("Der Server l\228uft gerade langsam (%.1f TPS) - es kann laggen."), tps.wert) }
     end
   else
     tps.schlechtSeit = nil
@@ -618,9 +878,9 @@ local function tpsMessen()
       tps.gutSeit = tps.gutSeit or jetzt
       if jetzt - tps.gutSeit >= CFG.TPS_DAUER then
         tps.gemeldet = false
-        log(string.format("Server wieder normal: %.1f TPS", tps.wert), colors.lime)
+        log(string.format(L("Server wieder normal: %.1f TPS"), tps.wert), colors.lime)
         chatWarteschlange[#chatWarteschlange + 1] = { alle = true, farbe = "green",
-          text = string.format("Der Server l\228uft wieder normal (%.1f TPS).", tps.wert) }
+          text = string.format(L("Der Server l\228uft wieder normal (%.1f TPS)."), tps.wert) }
       end
     end
   end
@@ -677,13 +937,13 @@ local function alarmeBerechnen()
   -- Reaktor
   if frisch("reaktor") then
     local st = quellen.reaktor.daten
-    if st.scram then add("r_scram", "FISSION SCRAM: " .. tostring(st.grund), 2) end
+    if st.scram then add("r_scram", L("FISSION SCRAM: ") .. tostring(st.grund), 2) end
     for _, w in ipairs(st.warnungen or {}) do
       local id = "r_w_" .. tostring(w):gsub("[%d%.%%%s]", "")
-      add(id, "Fission: " .. tostring(w), 1)
+      add(id, L("Fission: ") .. tostring(w), 1)
     end
   elseif quellen.reaktor.zeit then
-    add("r_verb", "Fission-Waechter: keine Verbindung", 2)
+    add("r_verb", L("Fission-Waechter: keine Verbindung"), 2)
   end
 
   -- Matrix
@@ -692,17 +952,17 @@ local function alarmeBerechnen()
   end
   local up = quellen.update
   if up.zeit and (os.clock() - quellen.update.zeit < 30) and up.daten.fehler then
-    add("upd_err", "Update-Computer: " .. tostring(up.daten.fehler), 1)
+    add("upd_err", L("Update-Computer: ") .. tostring(up.daten.fehler), 1)
   end
   local m = matrixDaten()
   if m then
     if type(m.anteil) == "number" and m.anteil < CFG.STROM_WARN then
-      add("m_low", "Strom niedrig (alle Matrizen): " .. pz(m.anteil), 2)
+      add("m_low", L("Strom niedrig (alle Matrizen): ") .. pz(m.anteil), 2)
     end
   end
   for _, mx in ipairs(matrixListe()) do
     if not mx.frisch then
-      add("m_verb_" .. mx.key, mx.name .. ": keine Daten", 1)
+      add("m_verb_" .. mx.key, mx.name .. L(": keine Daten"), 1)
     elseif mx.daten.fehler then
       add("m_err_" .. mx.key, mx.name .. ": " .. tostring(mx.daten.fehler), 1)
     end
@@ -714,29 +974,29 @@ local function alarmeBerechnen()
     for _, e in ipairs(tl) do
       local d = e.daten
       if not e.frisch then
-        add("t_verb_" .. e.schluessel, e.name .. ": keine Daten", 1)
+        add("t_verb_" .. e.schluessel, e.name .. L(": keine Daten"), 1)
       elseif d.fehler then
         add("t_err_" .. e.schluessel, e.name .. ": " .. tostring(d.fehler), 1)
       elseif type(d.dampf) == "number" and d.dampf >= CFG.DAMPF_WARN then
-        add("t_dampf_" .. e.schluessel, e.name .. ": Dampfstau " .. pz(d.dampf), 1)
+        add("t_dampf_" .. e.schluessel, e.name .. L(": Dampfstau ") .. pz(d.dampf), 1)
       end
     end
   end
 
   -- Wetter (nur melden, wenn der Wetter-PC schon einmal da war)
   if quellen.wetter.zeit and not frisch("wetter") then
-    add("w_verb", "Wetter-PC: keine Daten", 1)
+    add("w_verb", L("Wetter-PC: keine Daten"), 1)
   end
 
   -- Extreme Reactors
   for key, x in pairs(xtreme) do
     local d = x.daten
     if (os.clock() - x.zeit) >= CFG.ZEITLIMIT then
-      add("x_verb_" .. key, x.name .. ": keine Daten", 1)
+      add("x_verb_" .. key, x.name .. L(": keine Daten"), 1)
     elseif d.fehler then
       add("x_err_" .. key, x.name .. ": " .. tostring(d.fehler), 1)
     elseif type(d.brenn) == "number" and (d.brennMax or 0) > 0 and d.brenn / d.brennMax < (x.brennWarn or 0.1) then
-      add("x_brenn_" .. key, x.name .. ": Brennstoff niedrig " .. pz(d.brenn / d.brennMax), 1)
+      add("x_brenn_" .. key, x.name .. L(": Brennstoff niedrig ") .. pz(d.brenn / d.brennMax), 1)
     end
   end
 
@@ -744,16 +1004,16 @@ local function alarmeBerechnen()
   for key, x in pairs(fusion) do
     local d = x.daten
     if (os.clock() - x.zeit) >= CFG.ZEITLIMIT then
-      add("f_verb_" .. key, x.name .. ": keine Daten", 1)
+      add("f_verb_" .. key, x.name .. L(": keine Daten"), 1)
     elseif d.fehler then
       add("f_err_" .. key, x.name .. ": " .. tostring(d.fehler), 1)
     else
       if d.gezuendet then x.warGezuendet = true end
       if x.warGezuendet and d.gezuendet == false then
-        add("f_aus_" .. key, x.name .. ": Fusion erloschen", 2)
+        add("f_aus_" .. key, x.name .. L(": Fusion erloschen"), 2)
       end
       if type(d.dt) == "number" and (d.dtMax or 0) > 0 and d.dt / d.dtMax < (x.brennWarn or 0.1) then
-        add("f_brenn_" .. key, x.name .. ": D-T-Brennstoff niedrig " .. pz(d.dt / d.dtMax), 1)
+        add("f_brenn_" .. key, x.name .. L(": D-T-Brennstoff niedrig ") .. pz(d.dt / d.dtMax), 1)
       end
     end
   end
@@ -761,13 +1021,13 @@ local function alarmeBerechnen()
   -- Lager (Functional Storage)
   for key, ls in pairs(lagerSender) do
     if (os.clock() - ls.zeit) >= CFG.LAGER_ZEIT then
-      add("l_verb_" .. key, tostring(ls.ort) .. ": keine Daten", 1)
+      add("l_verb_" .. key, tostring(ls.ort) .. L(": keine Daten"), 1)
     else
       local voll = 0
       for _, f in ipairs(ls.faecher) do
         if (f.limit or 0) > 0 and f.menge / f.limit >= CFG.LAGER_WARN then voll = voll + 1 end
       end
-      if voll > 0 then add("l_voll_" .. key, tostring(ls.ort) .. ": " .. voll .. " Drawer fast voll", 1) end
+      if voll > 0 then add("l_voll_" .. key, tostring(ls.ort) .. ": " .. voll .. L(" Drawer fast voll"), 1) end
     end
   end
 
@@ -775,13 +1035,13 @@ local function alarmeBerechnen()
   local me = meDaten()
   if me then
     local qi = quote(me.itemsBenutzt, me.itemsGesamt)
-    if qi and qi >= CFG.ME_WARN then add("me_items", "ME-Items fast voll: " .. pz(qi), 1) end
+    if qi and qi >= CFG.ME_WARN then add("me_items", L("ME-Items fast voll: ") .. pz(qi), 1) end
     local qf = quote(me.fluidBenutzt, me.fluidGesamt)
-    if qf and qf >= CFG.ME_WARN then add("me_fluid", "ME-Fluids fast voll: " .. pz(qf), 1) end
+    if qf and qf >= CFG.ME_WARN then add("me_fluid", L("ME-Fluids fast voll: ") .. pz(qf), 1) end
     local qc = quote(me.chemBenutzt, me.chemGesamt)
-    if qc and qc >= CFG.ME_WARN then add("me_chem", "ME-Chemicals fast voll: " .. pz(qc), 1) end
+    if qc and qc >= CFG.ME_WARN then add("me_chem", L("ME-Chemicals fast voll: ") .. pz(qc), 1) end
   elseif quellen.me.zeit then
-    add("me_verb", "ME-System: keine Daten", 1)
+    add("me_verb", L("ME-System: keine Daten"), 1)
   end
 
   -- Aenderungen ins Log (und in den Spiel-Chat)
@@ -789,13 +1049,13 @@ local function alarmeBerechnen()
   for _, a in ipairs(liste) do
     neu[a.id] = a.text
     if not alteAlarme[a.id] then
-      log("ALARM: " .. a.text, a.stufe == 2 and colors.red or colors.orange)
+      log(L("ALARM: ") .. a.text, a.stufe == 2 and colors.red or colors.orange)
       chatOffen[a.id] = { seit = os.clock(), stufe = a.stufe }
     end
   end
   for id, text in pairs(alteAlarme) do
     if not neu[id] then
-      log("Behoben: " .. text, colors.lime)
+      log(L("Behoben: ") .. text, colors.lime)
       chatBehoben(id, text)
     end
   end
@@ -821,77 +1081,77 @@ local ausstehend = {}
 
 local function reaktorBefehl(befehl)
   local q = quellen.reaktor
-  if not frisch("reaktor") then melden("Kein Kontakt zum Waechter", colors.red) return end
+  if not frisch("reaktor") then melden(L("Kein Kontakt zum Waechter"), colors.red) return end
   local nonce = q.daten.nonce
   if nonce == false then
     ausstehend.reaktor = function() reaktorBefehl(befehl) end
-    melden("Wird gesendet ...", colors.lightGray)
+    melden(L("Wird gesendet ..."), colors.lightGray)
     return
   end
   if type(nonce) ~= "string" then
-    melden("Waechter braucht Update (v1.2)", colors.red)
+    melden(L("Waechter braucht Update (v1.2)"), colors.red)
     return
   end
   local sig = sha256(CFG.PASSWORT .. "|" .. befehl .. "|" .. nonce)
   rednet.send(q.id, { befehl = befehl, nonce = nonce, sig = sig }, CFG.PROT_REAKTOR)
   q.daten.nonce = false
-  log("Befehl an Reaktor: " .. befehl:upper(), colors.cyan)
-  melden("Gesendet: " .. befehl:upper() .. " ...", colors.lightGray)
+  log(L("Befehl an Reaktor: ") .. befehl:upper(), colors.cyan)
+  melden(L("Gesendet: ") .. befehl:upper() .. " ...", colors.lightGray)
 end
 
 local function xtremeBefehl(key, befehl, wert)
   local x = xtreme[key]
-  if not x or (os.clock() - x.zeit) >= CFG.ZEITLIMIT then melden("Kein Kontakt zum Reaktor", colors.red) return end
+  if not x or (os.clock() - x.zeit) >= CFG.ZEITLIMIT then melden(L("Kein Kontakt zum Reaktor"), colors.red) return end
   local nonce = x.daten.nonce
   if nonce == false then
     ausstehend["x:" .. key] = function() xtremeBefehl(key, befehl, wert) end
-    melden("Wird gesendet ...", colors.lightGray)
+    melden(L("Wird gesendet ..."), colors.lightGray)
     return
   end
-  if type(nonce) ~= "string" then melden("Reaktor-PC braucht Update", colors.red) return end
+  if type(nonce) ~= "string" then melden(L("Reaktor-PC braucht Update"), colors.red) return end
   wert = tostring(wert or "")
   local sig = sha256(CFG.PASSWORT .. "|" .. befehl .. "|" .. wert .. "|" .. nonce)
   rednet.send(x.id, { befehl = befehl, wert = wert, nonce = nonce, sig = sig }, CFG.PROT_XTREME)
   x.daten.nonce = false
-  log("Befehl an " .. x.name .. ": " .. befehl:upper() .. (wert ~= "" and (" " .. wert) or ""), colors.cyan)
-  melden("Gesendet ...", colors.lightGray)
+  log(L("Befehl an ") .. x.name .. ": " .. befehl:upper() .. (wert ~= "" and (" " .. wert) or ""), colors.cyan)
+  melden(L("Gesendet ..."), colors.lightGray)
 end
 
 local function fusionBefehl(key, befehl, wert)
   local x = fusion[key]
-  if not x or (os.clock() - x.zeit) >= CFG.ZEITLIMIT then melden("Kein Kontakt zum Reaktor", colors.red) return end
+  if not x or (os.clock() - x.zeit) >= CFG.ZEITLIMIT then melden(L("Kein Kontakt zum Reaktor"), colors.red) return end
   local nonce = x.daten.nonce
   if nonce == false then
     ausstehend["f:" .. key] = function() fusionBefehl(key, befehl, wert) end
-    melden("Wird gesendet ...", colors.lightGray)
+    melden(L("Wird gesendet ..."), colors.lightGray)
     return
   end
-  if type(nonce) ~= "string" then melden("Fusion-PC braucht Update", colors.red) return end
+  if type(nonce) ~= "string" then melden(L("Fusion-PC braucht Update"), colors.red) return end
   wert = tostring(wert or "")
   local sig = sha256(CFG.PASSWORT .. "|" .. befehl .. "|" .. wert .. "|" .. nonce)
   rednet.send(x.id, { befehl = befehl, wert = wert, nonce = nonce, sig = sig }, CFG.PROT_FUSION)
   x.daten.nonce = false
-  log("Befehl an " .. x.name .. ": " .. befehl:upper() .. (wert ~= "" and (" " .. wert) or ""), colors.cyan)
-  melden("Gesendet ...", colors.lightGray)
+  log(L("Befehl an ") .. x.name .. ": " .. befehl:upper() .. (wert ~= "" and (" " .. wert) or ""), colors.cyan)
+  melden(L("Gesendet ..."), colors.lightGray)
 end
 
 -- Allgemeine Steuerbefehle (Tuer, Mobfarm ...) ueber NETZ/steuer
 local function steuerBefehl(liste, key, befehl, wert)
   local x = liste[key]
-  if not x or (os.clock() - x.zeit) >= 15 then melden("Kein Kontakt zu " .. (x and x.name or "Computer"), colors.red) return end
+  if not x or (os.clock() - x.zeit) >= 15 then melden(L("Kein Kontakt zu ") .. (x and x.name or L("Computer")), colors.red) return end
   local nonce = x.daten.nonce
   if nonce == false then
     ausstehend["s:" .. key] = function() steuerBefehl(liste, key, befehl, wert) end
-    melden("Wird gesendet ...", colors.lightGray)
+    melden(L("Wird gesendet ..."), colors.lightGray)
     return
   end
-  if type(nonce) ~= "string" then melden(x.name .. " braucht ein Update", colors.red) return end
+  if type(nonce) ~= "string" then melden(x.name .. L(" braucht ein Update"), colors.red) return end
   wert = tostring(wert or "")
   local sig = sha256(CFG.PASSWORT .. "|" .. befehl .. "|" .. wert .. "|" .. nonce)
   rednet.send(x.id, { befehl = befehl, wert = wert, nonce = nonce, sig = sig }, CFG.PROT_STEUER)
   x.daten.nonce = false
-  log("Befehl an " .. x.name .. ": " .. befehl:upper(), colors.cyan)
-  melden("Gesendet ...", colors.lightGray)
+  log(L("Befehl an ") .. x.name .. ": " .. befehl:upper(), colors.cyan)
+  melden(L("Gesendet ..."), colors.lightGray)
 end
 
 -- ---------- Seiten ----------
@@ -923,17 +1183,17 @@ function ZEICHNE.uebersicht(t, x0, y0, W, H)
   if vorhanden("reaktor") then
     local st, rText, rFarbe = reaktorInfo()
     local d = st and st.daten
-    kacheln[#kacheln + 1] = { "FISSION", rText, rFarbe, d and d.temp and d.temp / 1200, rFarbe,
-      d and string.format("Temp: %.0f K", d.temp or 0),
-      d and string.format("Burn: %.1f mB/t", d.burnIst or 0), "reaktor" }
+    kacheln[#kacheln + 1] = { L("FISSION"), rText, rFarbe, d and d.temp and d.temp / 1200, rFarbe,
+      d and string.format(L("Temp: %.0f K"), d.temp or 0),
+      d and string.format(L("Burn: %.1f mB/t"), d.burnIst or 0), "reaktor" }
   end
 
   if vorhanden("energie") then
     local m, ms = matrixDaten()
-    local eTitel = ms.gesamt > 1 and ("MATRIX (" .. ms.anzahl .. "/" .. ms.gesamt .. ")") or "MATRIX"
-    kacheln[#kacheln + 1] = { eTitel, m and ((ms.gesamt > 1 and "Gesamt " or "Matrix ") .. pz(m.anteil)) or "KEINE DATEN",
+    local eTitel = ms.gesamt > 1 and (L("MATRIX (") .. ms.anzahl .. "/" .. ms.gesamt .. ")") or L("MATRIX")
+    kacheln[#kacheln + 1] = { eTitel, m and ((ms.gesamt > 1 and L("Gesamt ") or L("Matrix ")) .. pz(m.anteil)) or L("KEINE DATEN"),
       m and farbeFuer(m.anteil, 0.25, CFG.STROM_WARN, true) or colors.lightGray, m and m.anteil, nil,
-      m and ("Rein: " .. kurz(m.rein, " FE/t")), m and ("Raus: " .. kurz(m.raus, " FE/t")), "energie" }
+      m and (L("Rein: ") .. kurz(m.rein, " FE/t")), m and (L("Raus: ") .. kurz(m.raus, " FE/t")), "energie" }
   end
 
   if vorhanden("turbine") then
@@ -942,20 +1202,20 @@ function ZEICHNE.uebersicht(t, x0, y0, W, H)
     local tFarbe = not tu and colors.lightGray
       or (tu.dampf >= CFG.DAMPF_WARN and colors.orange)
       or (tu.produktion > 0 and colors.lime) or colors.lightGray
-    local tTitel = tsum.gesamt > 1 and ("TURBINEN (" .. tsum.anzahl .. "/" .. tsum.gesamt .. ")") or "TURBINE"
-    kacheln[#kacheln + 1] = { tTitel, tu and (((tu.produktion or 0) > 0) and "PRODUZIERT" or "STILL") or "KEINE DATEN",
-      tFarbe, tq, nil, tu and ("Leistung: " .. kurz(tu.produktion, " FE/t")),
-      tu and ("Dampf max: " .. pz(tu.dampf)), "turbine" }
+    local tTitel = tsum.gesamt > 1 and (L("TURBINEN (") .. tsum.anzahl .. "/" .. tsum.gesamt .. ")") or L("TURBINE")
+    kacheln[#kacheln + 1] = { tTitel, tu and (((tu.produktion or 0) > 0) and L("PRODUZIERT") or L("STILL")) or L("KEINE DATEN"),
+      tFarbe, tq, nil, tu and (L("Leistung: ") .. kurz(tu.produktion, " FE/t")),
+      tu and (L("Dampf max: ") .. pz(tu.dampf)), "turbine" }
   end
 
   if vorhanden("me") then
     local me = meDaten()
     local qi = me and quote(me.itemsBenutzt, me.itemsGesamt)
-    kacheln[#kacheln + 1] = { "ME-SYSTEM", me and ("Items " .. pz(qi)) or "KEINE DATEN",
+    kacheln[#kacheln + 1] = { L("ME-SYSTEM"), me and (L("Items ") .. pz(qi)) or L("KEINE DATEN"),
       me and farbeFuer(qi, 0.75, CFG.ME_WARN) or colors.lightGray, qi, nil,
-      me and ("Bytes: " .. kurz(me.itemsBenutzt) .. " / " .. kurz(me.itemsGesamt)),
-      me and ("Fluids: " .. pz(quote(me.fluidBenutzt, me.fluidGesamt))
-        .. "   Chem: " .. pz(quote(me.chemBenutzt, me.chemGesamt))), "me" }
+      me and (L("Bytes: ") .. kurz(me.itemsBenutzt) .. " / " .. kurz(me.itemsGesamt)),
+      me and (L("Fluids: ") .. pz(quote(me.fluidBenutzt, me.fluidGesamt))
+        .. L("   Chem: ") .. pz(quote(me.chemBenutzt, me.chemGesamt))), "me" }
   end
 
   if vorhanden("xtreme") then
@@ -970,9 +1230,9 @@ function ZEICHNE.uebersicht(t, x0, y0, W, H)
         if q and (not minBrenn or q < minBrenn) then minBrenn = q end
       end
     end
-    kacheln[#kacheln + 1] = { "XTREME (" .. an .. "/" .. alle .. ")", an > 0 and (an .. " LAUFEN") or "AUS",
+    kacheln[#kacheln + 1] = { L("XTREME (") .. an .. "/" .. alle .. ")", an > 0 and (an .. L(" LAUFEN")) or L("AUS"),
       an > 0 and colors.lime or colors.lightGray, minBrenn, nil,
-      "Leistung: " .. kurz(prod, " FE/t"), "Brennstoff min: " .. pz(minBrenn), "xtreme" }
+      L("Leistung: ") .. kurz(prod, " FE/t"), L("Brennstoff min: ") .. pz(minBrenn), "xtreme" }
   end
 
   if vorhanden("fusion") then
@@ -987,9 +1247,9 @@ function ZEICHNE.uebersicht(t, x0, y0, W, H)
         if q and (not minDT or q < minDT) then minDT = q end
       end
     end
-    kacheln[#kacheln + 1] = { "FUSION (" .. an .. "/" .. alle .. ")", an > 0 and (an .. " GEZ\220NDET") or "NICHT GEZ\220NDET",
+    kacheln[#kacheln + 1] = { L("FUSION (") .. an .. "/" .. alle .. ")", an > 0 and (an .. L(" GEZ\220NDET")) or L("NICHT GEZ\220NDET"),
       an > 0 and colors.lime or colors.orange, minDT, nil,
-      "Leistung: " .. kurz(prod, " FE/t"), "D-T min: " .. pz(minDT), "fusion" }
+      L("Leistung: ") .. kurz(prod, " FE/t"), L("D-T min: ") .. pz(minDT), "fusion" }
   end
 
   -- Raster: 1 Kachel = volle Breite, bis 4 = 2 Spalten, mehr = 3 Spalten
@@ -1016,11 +1276,11 @@ function ZEICHNE.uebersicht(t, x0, y0, W, H)
   local ay = y0 + flaecheH
   local aH = H - flaecheH
   local akzent = #alarme > 0 and (alarme[1].stufe == 2 and colors.red or colors.orange) or colors.lime
-  panel(t, x0, ay, W, aH, "AKTIVE ALARME (" .. #alarme .. ")", akzent)
+  panel(t, x0, ay, W, aH, L("AKTIVE ALARME (") .. #alarme .. ")", akzent)
   if n == 0 then
-    schreib(t, x0 + 2, ay + 2, "Noch keine Anlagen gemeldet - Sender gestartet?", colors.lightGray, colors.gray, W - 3)
+    schreib(t, x0 + 2, ay + 2, L("Noch keine Anlagen gemeldet - Sender gestartet?"), colors.lightGray, colors.gray, W - 3)
   elseif #alarme == 0 then
-    schreib(t, x0 + 2, ay + 2, "Alles in Ordnung.", colors.lime, colors.gray)
+    schreib(t, x0 + 2, ay + 2, L("Alles in Ordnung."), colors.lime, colors.gray)
   else
     for i = 1, math.min(#alarme, aH - 2) do
       local a = alarme[i]
@@ -1034,7 +1294,7 @@ end
 local function verlaufZeichnen(t, x0, y0, W, H, werte, titel)
   if H < 5 then return end
   local minuten = math.floor((W - 4) * CFG.VERLAUF_TAKT / 60)
-  panel(t, x0, y0, W, H, titel .. " (" .. minuten .. " MIN)", colors.cyan)
+  panel(t, x0, y0, W, H, titel .. " (" .. minuten .. L(" MIN)"), colors.cyan)
   local bx, by, bw, bh = x0 + 2, y0 + 2, W - 4, H - 3
   fuell(t, bx, by, bw, bh, colors.black)
   local start = math.max(1, #werte - bw + 1)
@@ -1046,14 +1306,14 @@ local function verlaufZeichnen(t, x0, y0, W, H, werte, titel)
     fuell(t, bx + spalte - 1, by + bh - hoehe, 1, hoehe, farbeFuer(v, 0.25, CFG.STROM_WARN, true))
     spalte = spalte + 1
   end
-  if #werte == 0 then schreib(t, bx + 1, by, "Sammle Daten ...", colors.lightGray, colors.black) end
+  if #werte == 0 then schreib(t, bx + 1, by, L("Sammle Daten ..."), colors.lightGray, colors.black) end
 end
 
 -- Kopf-Panel mit Fuellstand, Ein-/Ausgang, Netto, Zeit bis voll/leer
 local function energiePanel(t, x0, y0, W, oH, m, titel, fehlerText)
   panel(t, x0, y0, W, oH, titel, colors.cyan)
   if not m then
-    schreib(t, x0 + 2, y0 + 2, fehlerText or "Keine Daten.", colors.lightGray, colors.gray, W - 3)
+    schreib(t, x0 + 2, y0 + 2, fehlerText or L("Keine Daten."), colors.lightGray, colors.gray, W - 3)
     return
   end
   local bF = farbeFuer(m.anteil, 0.25, CFG.STROM_WARN, true)
@@ -1064,24 +1324,24 @@ local function energiePanel(t, x0, y0, W, oH, m, titel, fehlerText)
   local sp = math.floor((W - 4) / 2)
   local ly = y0 + (oH >= 9 and 5 or 4)
   if ly < y0 + oH then
-    wertZeile(t, x0 + 2, ly, sp - 2, "Eingang", kurz(m.rein, " FE/t"), colors.lime)
-    wertZeile(t, x0 + 2 + sp, ly, sp - 1, "Ausgang", kurz(m.raus, " FE/t"), colors.orange)
+    wertZeile(t, x0 + 2, ly, sp - 2, L("Eingang"), kurz(m.rein, " FE/t"), colors.lime)
+    wertZeile(t, x0 + 2 + sp, ly, sp - 1, L("Ausgang"), kurz(m.raus, " FE/t"), colors.orange)
   end
   ly = ly + 1
   if ly < y0 + oH then
-    wertZeile(t, x0 + 2, ly, sp - 2, "Netto", (netto >= 0 and "+" or "") .. kurz(netto, " FE/t"),
+    wertZeile(t, x0 + 2, ly, sp - 2, L("Netto"), (netto >= 0 and "+" or "") .. kurz(netto, " FE/t"),
       netto >= 0 and colors.lime or colors.red)
-    wertZeile(t, x0 + 2 + sp, ly, sp - 1, "Limit", kurz(m.limit, " FE/t"))
+    wertZeile(t, x0 + 2 + sp, ly, sp - 1, L("Limit"), kurz(m.limit, " FE/t"))
   end
   ly = ly + 1
   if ly < y0 + oH then
     local txt, zeit
     if netto > 0 and m.max and m.energie then
-      txt, zeit = "Voll in", ((m.max - m.energie) / netto) / 20
+      txt, zeit = L("Voll in"), ((m.max - m.energie) / netto) / 20
     elseif netto < 0 and m.energie then
-      txt, zeit = "Leer in", (m.energie / -netto) / 20
+      txt, zeit = L("Leer in"), (m.energie / -netto) / 20
     else
-      txt, zeit = "Bilanz", nil
+      txt, zeit = L("Bilanz"), nil
     end
     wertZeile(t, x0 + 2, ly, sp - 2, txt, zeit and dauer(zeit) or "ausgeglichen", netto < 0 and colors.orange or colors.white)
   end
@@ -1097,7 +1357,7 @@ function ZEICHNE.energie(t, x0, y0, W, H)
     if energieAuswahl > #liste then energieAuswahl = 0 end
     local n = #liste + 1
     local tw = math.min(16, math.floor((W + 1) / n) - 1)
-    knopf(t, x0, y0, tw, 1, "GESAMT", energieAuswahl == 0 and colors.cyan or colors.gray,
+    knopf(t, x0, y0, tw, 1, L("GESAMT"), energieAuswahl == 0 and colors.cyan or colors.gray,
       energieAuswahl == 0 and colors.black or colors.white, function() energieAuswahl = 0 end)
     for i, mx in ipairs(liste) do
       local aktiv = (energieAuswahl == i)
@@ -1123,21 +1383,21 @@ function ZEICHNE.energie(t, x0, y0, W, H)
       m = k
     end
     local oH = math.min(10, math.floor(hH / 2))
-    local fehler = not mx and "Keine Daten." or (not mx.frisch and "Keine aktuellen Daten." or (d.fehler and ("Fehler: " .. tostring(d.fehler))))
-    energiePanel(t, x0, y, W, oH, m, (mx and mx.name:upper() or "MATRIX"), fehler)
-    verlaufZeichnen(t, x0, y + oH + 1, W, hH - oH - 1, mx and mx.verlauf or {}, "VERLAUF " .. (mx and mx.name:upper() or ""))
+    local fehler = not mx and L("Keine Daten.") or (not mx.frisch and L("Keine aktuellen Daten.") or (d.fehler and (L("Fehler: ") .. tostring(d.fehler))))
+    energiePanel(t, x0, y, W, oH, m, (mx and mx.name:upper() or L("MATRIX")), fehler)
+    verlaufZeichnen(t, x0, y + oH + 1, W, hH - oH - 1, mx and mx.verlauf or {}, L("VERLAUF ") .. (mx and mx.name:upper() or ""))
     return
   end
 
   -- GESAMT
   local oH = math.min(9, math.max(6, math.floor(hH / 3)))
-  energiePanel(t, x0, y, W, oH, summe, "GESAMT (" .. s.anzahl .. " VON " .. s.gesamt .. " MATRIZEN)",
-    "Keine aktuellen Daten von den Matrix-Sendern.")
+  energiePanel(t, x0, y, W, oH, summe, L("GESAMT (") .. s.anzahl .. L(" VON ") .. s.gesamt .. L(" MATRIZEN)"),
+    L("Keine aktuellen Daten von den Matrix-Sendern."))
   y = y + oH + 1
 
   -- Kompakte Liste aller Matrizen
   local lH = math.min(#liste + 2, y0 + H - y)
-  panel(t, x0, y, W, lH, "MATRIZEN", colors.cyan)
+  panel(t, x0, y, W, lH, L("MATRIZEN"), colors.cyan)
   local nameB = math.min(16, math.max(8, math.floor(W * 0.18)))
   local textB = 26
   local bx = x0 + 2 + nameB + 1
@@ -1152,7 +1412,7 @@ function ZEICHNE.energie(t, x0, y0, W, H)
     schreib(t, x0 + 2, ry, mx.name, ok and colors.white or colors.red, colors.gray, nameB)
     if bB > 2 then balken(t, bx, ry, bB, q or 0, f) end
     rechts(t, bx + math.max(bB, 0) + 6, ry, ok and pz(q) or "--", f, colors.gray)
-    rechts(t, x0 + W - 2, ry, ok and ("+" .. kurz(d.rein) .. " / -" .. kurz(d.raus) .. " FE/t") or "keine Daten",
+    rechts(t, x0 + W - 2, ry, ok and ("+" .. kurz(d.rein) .. " / -" .. kurz(d.raus) .. " FE/t") or L("keine Daten"),
       ok and colors.lightGray or colors.red, colors.gray)
     knoepfe[#knoepfe + 1] = { name = t.name, x1 = x0, y1 = ry, x2 = x0 + W - 1, y2 = ry,
       aktion = function() energieAuswahl = i end }
@@ -1160,7 +1420,7 @@ function ZEICHNE.energie(t, x0, y0, W, H)
   y = y + lH + 1
 
   -- Verlauf gesamt (wenn Platz ist)
-  verlaufZeichnen(t, x0, y, W, y0 + H - y, verlauf, "VERLAUF GESAMT")
+  verlaufZeichnen(t, x0, y, W, y0 + H - y, verlauf, L("VERLAUF GESAMT"))
 end
 
 function ZEICHNE.reaktor(t, x0, y0, W, H)
@@ -1170,18 +1430,18 @@ function ZEICHNE.reaktor(t, x0, y0, W, H)
   local rW = W - lW - 1
 
   -- Links: Messwerte
-  panel(t, x0, y0, lW, H, "MESSWERTE", rFarbe)
+  panel(t, x0, y0, lW, H, L("MESSWERTE"), rFarbe)
   if not d then
-    schreib(t, x0 + 2, y0 + 2, st and "Waechter liefert keine Werte." or "Keine Verbindung zum Waechter.",
+    schreib(t, x0 + 2, y0 + 2, st and L("Waechter liefert keine Werte.") or L("Keine Verbindung zum Waechter."),
       colors.lightGray, colors.gray, lW - 3)
   else
     local bw = lW - 4
     local zeilen = {
-      { "Temperatur", string.format("%.0f K", d.temp or 0), (d.temp or 0) / 1200, farbeFuer(d.temp or 0, 850, 1000) },
-      { "Kuehlmittel", pz(d.kuehl), d.kuehl, farbeFuer(d.kuehl, 0.80, 0.60, true) },
-      { "Dampf", pz(d.heiss), d.heiss, farbeFuer(d.heiss, 0.50, 0.80) },
-      { "Atommuell", pz(d.muell), d.muell, farbeFuer(d.muell, 0.50, 0.80) },
-      { "Brennstoff", pz(d.brenn), d.brenn, farbeFuer(d.brenn, 0.10, 0.001, true) },
+      { L("Temperatur"), string.format("%.0f K", d.temp or 0), (d.temp or 0) / 1200, farbeFuer(d.temp or 0, 850, 1000) },
+      { L("Kuehlmittel"), pz(d.kuehl), d.kuehl, farbeFuer(d.kuehl, 0.80, 0.60, true) },
+      { L("Dampf"), pz(d.heiss), d.heiss, farbeFuer(d.heiss, 0.50, 0.80) },
+      { L("Atommuell"), pz(d.muell), d.muell, farbeFuer(d.muell, 0.50, 0.80) },
+      { L("Brennstoff"), pz(d.brenn), d.brenn, farbeFuer(d.brenn, 0.10, 0.001, true) },
     }
     local y = y0 + 2
     for _, z in ipairs(zeilen) do
@@ -1191,19 +1451,19 @@ function ZEICHNE.reaktor(t, x0, y0, W, H)
       y = y + 3
     end
     if y < y0 + H then
-      wertZeile(t, x0 + 2, y, bw, "Schaden", string.format("%.2f", d.schaden or 0),
+      wertZeile(t, x0 + 2, y, bw, L("Schaden"), string.format("%.2f", d.schaden or 0),
         (d.schaden or 0) > 0 and colors.red or colors.lime)
       y = y + 1
     end
     if y < y0 + H then
-      wertZeile(t, x0 + 2, y, bw, "Burn Rate",
+      wertZeile(t, x0 + 2, y, bw, L("Burn Rate"),
         string.format("%.1f / %.1f mB/t", d.burnIst or 0, d.burn or 0))
     end
   end
 
   -- Rechts: Steuerung
   local rx = x0 + lW + 1
-  panel(t, rx, y0, rW, H, "STEUERUNG", rFarbe)
+  panel(t, rx, y0, rW, H, L("STEUERUNG"), rFarbe)
   schreib(t, rx + 2, y0 + 2, rText, rFarbe, colors.gray, rW - 3)
   local y = y0 + 3
   if st and st.scram then
@@ -1212,7 +1472,7 @@ function ZEICHNE.reaktor(t, x0, y0, W, H)
       schreib(t, rx + 2, y, teil, colors.red, colors.gray, rW - 3)
       y = y + 1
     end
-    schreib(t, rx + 2, y, "Reset nur vor Ort (Taste R)", colors.lightGray, colors.gray, rW - 3)
+    schreib(t, rx + 2, y, L("Reset nur vor Ort (Taste R)"), colors.lightGray, colors.gray, rW - 3)
     y = y + 2
   end
   y = math.max(y, y0 + 6)
@@ -1220,27 +1480,27 @@ function ZEICHNE.reaktor(t, x0, y0, W, H)
 
   if bestaetigung and os.clock() > bestaetigung.bis then bestaetigung = nil end
   if bestaetigung then
-    schreib(t, rx + 2, y, "Fission wirklich STARTEN?", colors.orange, colors.gray, rW - 3)
+    schreib(t, rx + 2, y, L("Fission wirklich STARTEN?"), colors.orange, colors.gray, rW - 3)
     local hb = math.floor((bw - 1) / 2)
-    knopf(t, rx + 2, y + 2, hb, 3, "JA", colors.green, colors.white, function()
+    knopf(t, rx + 2, y + 2, hb, 3, L("JA"), colors.green, colors.white, function()
       bestaetigung = nil
       reaktorBefehl("start")
     end)
-    knopf(t, rx + 3 + hb, y + 2, bw - hb - 1, 3, "NEIN", colors.black, colors.white, function()
+    knopf(t, rx + 3 + hb, y + 2, bw - hb - 1, 3, L("NEIN"), colors.black, colors.white, function()
       bestaetigung = nil
     end)
     y = y + 6
   else
-    knopf(t, rx + 2, y, bw, 3, "START", colors.green, colors.white, function()
+    knopf(t, rx + 2, y, bw, 3, L("START"), colors.green, colors.white, function()
       bestaetigung = { aktion = "start", bis = os.clock() + 8 }
     end)
-    knopf(t, rx + 2, y + 4, bw, 3, "STOP", colors.black, colors.white, function()
+    knopf(t, rx + 2, y + 4, bw, 3, L("STOP"), colors.black, colors.white, function()
       reaktorBefehl("stop")
     end)
     y = y + 8
   end
   if y + 2 < y0 + H then
-    knopf(t, rx + 2, y, bw, 3, "NOT-AUS", colors.red, colors.white, function()
+    knopf(t, rx + 2, y, bw, 3, L("NOT-AUS"), colors.red, colors.white, function()
       reaktorBefehl("notaus")
     end)
     y = y + 4
@@ -1266,21 +1526,21 @@ local function turbinePanel(t, x0, y0, W, H, e)
   local akzent = not e.frisch and colors.lightGray or (tu.fehler and colors.red) or colors.cyan
   panel(t, x0, y0, W, H, e.name:upper(), akzent)
   if not e.frisch then
-    schreib(t, x0 + 2, y0 + 2, "Keine aktuellen Daten.", colors.lightGray, colors.gray, W - 3)
+    schreib(t, x0 + 2, y0 + 2, L("Keine aktuellen Daten."), colors.lightGray, colors.gray, W - 3)
     return
   end
   if tu.fehler then
-    schreib(t, x0 + 2, y0 + 2, "Fehler: " .. tostring(tu.fehler), colors.red, colors.gray, W - 3)
+    schreib(t, x0 + 2, y0 + 2, L("Fehler: ") .. tostring(tu.fehler), colors.red, colors.gray, W - 3)
     return
   end
   local bw = W - 4
   local tq = quote(tu.produktion, tu.maxProd)
   local fq = quote(tu.fluss, tu.maxFluss)
   local zeilen = {
-    { "Leistung", kurz(tu.produktion, " FE/t") .. " / " .. kurz(tu.maxProd, " FE/t"), tq, colors.lime },
-    { "Dampf im Tank", pz(tu.dampf), tu.dampf, farbeFuer(tu.dampf, 0.5, CFG.DAMPF_WARN) },
-    { "Dampffluss", kurz(tu.fluss, " mB/t") .. " / " .. kurz(tu.maxFluss, " mB/t"), fq, colors.cyan },
-    { "Energiepuffer", pz(tu.puffer), tu.puffer, farbeFuer(tu.puffer, 0.8, 0.95) },
+    { L("Leistung"), kurz(tu.produktion, " FE/t") .. " / " .. kurz(tu.maxProd, " FE/t"), tq, colors.lime },
+    { L("Dampf im Tank"), pz(tu.dampf), tu.dampf, farbeFuer(tu.dampf, 0.5, CFG.DAMPF_WARN) },
+    { L("Dampffluss"), kurz(tu.fluss, " mB/t") .. " / " .. kurz(tu.maxFluss, " mB/t"), fq, colors.cyan },
+    { L("Energiepuffer"), pz(tu.puffer), tu.puffer, farbeFuer(tu.puffer, 0.8, 0.95) },
   }
   local gross = H >= 20
   local y = y0 + 2
@@ -1291,15 +1551,15 @@ local function turbinePanel(t, x0, y0, W, H, e)
     y = y + (gross and 5 or 3)
   end
   if y < y0 + H and type(tu.puffer) == "number" and tu.puffer >= 0.95 then
-    schreib(t, x0 + 2, y, "Puffer voll!", colors.orange, colors.gray, W - 3)
+    schreib(t, x0 + 2, y, L("Puffer voll!"), colors.orange, colors.gray, W - 3)
   end
 end
 
 function ZEICHNE.turbine(t, x0, y0, W, H)
   local liste = turbinenListe()
   if #liste == 0 then
-    panel(t, x0, y0, W, H, "TURBINEN", colors.cyan)
-    schreib(t, x0 + 2, y0 + 2, "Keine Daten von Turbinen-Sendern.", colors.lightGray, colors.gray, W - 3)
+    panel(t, x0, y0, W, H, L("TURBINEN"), colors.cyan)
+    schreib(t, x0 + 2, y0 + 2, L("Keine Daten von Turbinen-Sendern."), colors.lightGray, colors.gray, W - 3)
     return
   end
 
@@ -1308,13 +1568,13 @@ function ZEICHNE.turbine(t, x0, y0, W, H)
   local oben = 0
   if #liste > 1 then
     oben = 5
-    panel(t, x0, y0, W, 4, "GESAMT (" .. #liste .. " TURBINEN)", colors.cyan)
+    panel(t, x0, y0, W, 4, L("GESAMT (") .. #liste .. L(" TURBINEN)"), colors.cyan)
     if sum then
-      wertZeile(t, x0 + 2, y0 + 1, W - 4, "Leistung",
+      wertZeile(t, x0 + 2, y0 + 1, W - 4, L("Leistung"),
         kurz(sum.produktion, " FE/t") .. " / " .. kurz(sum.maxProd, " FE/t"), colors.lime)
       balken(t, x0 + 2, y0 + 2, W - 4, quote(sum.produktion, sum.maxProd), colors.lime)
     else
-      schreib(t, x0 + 2, y0 + 2, "Keine aktuellen Daten.", colors.lightGray, colors.gray)
+      schreib(t, x0 + 2, y0 + 2, L("Keine aktuellen Daten."), colors.lightGray, colors.gray)
     end
   end
 
@@ -1330,10 +1590,10 @@ end
 
 function ZEICHNE.me(t, x0, y0, W, H)
   local me = meDaten()
-  panel(t, x0, y0, W, H, "ME-SYSTEM", colors.cyan)
+  panel(t, x0, y0, W, H, L("ME-SYSTEM"), colors.cyan)
   if not me then
     local f = frisch("me") and quellen.me.daten.fehler
-    schreib(t, x0 + 2, y0 + 2, f and ("Fehler: " .. f) or "Keine Daten vom ME-Sender.", colors.lightGray, colors.gray, W - 3)
+    schreib(t, x0 + 2, y0 + 2, f and (L("Fehler: ") .. f) or L("Keine Daten vom ME-Sender."), colors.lightGray, colors.gray, W - 3)
     return
   end
   local bw = W - 4
@@ -1341,11 +1601,11 @@ function ZEICHNE.me(t, x0, y0, W, H)
   local qf = quote(me.fluidBenutzt, me.fluidGesamt)
   local qc = quote(me.chemBenutzt, me.chemGesamt)
   local zeilen = {
-    { "Item-Speicher", kurz(me.itemsBenutzt) .. " / " .. kurz(me.itemsGesamt) .. " Bytes  (" .. pz(qi) .. ")",
+    { L("Item-Speicher"), kurz(me.itemsBenutzt) .. " / " .. kurz(me.itemsGesamt) .. L(" Bytes  (") .. pz(qi) .. ")",
       qi, farbeFuer(qi, 0.75, CFG.ME_WARN) },
-    { "Fluid-Speicher", kurz(me.fluidBenutzt) .. " / " .. kurz(me.fluidGesamt) .. " Bytes  (" .. pz(qf) .. ")",
+    { L("Fluid-Speicher"), kurz(me.fluidBenutzt) .. " / " .. kurz(me.fluidGesamt) .. L(" Bytes  (") .. pz(qf) .. ")",
       qf, farbeFuer(qf, 0.75, CFG.ME_WARN) },
-    { "Chemical-Speicher", kurz(me.chemBenutzt) .. " / " .. kurz(me.chemGesamt) .. " Bytes  (" .. pz(qc) .. ")",
+    { L("Chemical-Speicher"), kurz(me.chemBenutzt) .. " / " .. kurz(me.chemGesamt) .. L(" Bytes  (") .. pz(qc) .. ")",
       qc, farbeFuer(qc, 0.75, CFG.ME_WARN) },
   }
   -- Drei grosse Balken, gleichmaessig ueber die Hoehe verteilt
@@ -1363,19 +1623,19 @@ end
 local function wetterInfo(t, x0, y0, W, H)
   local w = wetterDaten()
   local wt, wf = wetterText(w)
-  panel(t, x0, y0, W, H, "ZEIT & WETTER", w and wf or colors.lightGray)
+  panel(t, x0, y0, W, H, L("ZEIT & WETTER"), w and wf or colors.lightGray)
   if not w then
-    schreib(t, x0 + 2, y0 + 2, "Keine Daten vom Wetter-PC.", colors.lightGray, colors.gray, W - 3)
+    schreib(t, x0 + 2, y0 + 2, L("Keine Daten vom Wetter-PC."), colors.lightGray, colors.gray, W - 3)
     return
   end
   local bw = W - 4
   local y = y0 + 2
 
   -- Uhrzeit und Tag/Nacht
-  schreib(t, x0 + 2, y, textutils.formatTime(w.uhr or 0, true) .. " Uhr", colors.white, colors.gray)
-  rechts(t, x0 + W - 2, y, w.nacht and "NACHT" or "TAG", w.nacht and colors.cyan or colors.orange, colors.gray)
+  schreib(t, x0 + 2, y, textutils.formatTime(w.uhr or 0, true) .. L(" Uhr"), colors.white, colors.gray)
+  rechts(t, x0 + W - 2, y, w.nacht and L("NACHT") or L("TAG"), w.nacht and colors.cyan or colors.orange, colors.gray)
   y = y + 1
-  schreib(t, x0 + 2, y, "Tag " .. tostring(w.tag), colors.lightGray, colors.gray)
+  schreib(t, x0 + 2, y, L("Tag ") .. tostring(w.tag), colors.lightGray, colors.gray)
   y = y + 2
 
   -- Tagesleiste 0-24 Uhr mit Markierung
@@ -1405,12 +1665,12 @@ local function wetterInfo(t, x0, y0, W, H)
 
   local spawn = w.nacht or w.gewitter
   local zeilen = {
-    { "Wetter", wt, wf },
-    { w.nacht and "Tag beginnt in" or "Nacht beginnt in", wechsel, colors.white },
-    { "Monster-Spawn draussen", spawn and "MOEGLICH" or "nein", spawn and colors.orange or colors.lime },
-    { "Mond", tostring(w.mondName), w.mond == 0 and colors.orange or colors.white },
-    { "Himmelslicht", tostring(w.licht or "--") .. " / 15", colors.white },
-    { "Biom", tostring(w.biom or "--"):gsub("^.-:", ""), colors.lightGray },
+    { L("Wetter"), wt, wf },
+    { w.nacht and L("Tag beginnt in") or L("Nacht beginnt in"), wechsel, colors.white },
+    { L("Monster-Spawn draussen"), spawn and L("MOEGLICH") or "nein", spawn and colors.orange or colors.lime },
+    { L("Mond"), tostring(w.mondName), w.mond == 0 and colors.orange or colors.white },
+    { L("Himmelslicht"), tostring(w.licht or "--") .. " / 15", colors.white },
+    { L("Biom"), tostring(w.biom or "--"):gsub("^.-:", ""), colors.lightGray },
   }
   for _, z in ipairs(zeilen) do
     if y >= y0 + H then break end
@@ -1418,41 +1678,41 @@ local function wetterInfo(t, x0, y0, W, H)
     y = y + 2
   end
   if w.mond == 0 and w.nacht and y < y0 + H then
-    schreib(t, x0 + 2, y, "Vollmondnacht: mehr Monster!", colors.orange, colors.gray, W - 3)
+    schreib(t, x0 + 2, y, L("Vollmondnacht: mehr Monster!"), colors.orange, colors.gray, W - 3)
   end
 end
 
 -- Befehl an den Wetter-PC (Command Computer), gesichert wie beim Reaktor
 local function wetterBefehl(befehl, wert)
   local q = quellen.wetter
-  if not frisch("wetter") then melden("Kein Kontakt zum Wetter-PC", colors.red) return end
+  if not frisch("wetter") then melden(L("Kein Kontakt zum Wetter-PC"), colors.red) return end
   local nonce = q.daten.nonce
   if nonce == false then
     ausstehend.wetter = function() wetterBefehl(befehl, wert) end
-    melden("Wird gesendet ...", colors.lightGray)
+    melden(L("Wird gesendet ..."), colors.lightGray)
     return
   end
-  if type(nonce) ~= "string" then melden("Wetter-PC braucht Update (v3)", colors.red) return end
+  if type(nonce) ~= "string" then melden(L("Wetter-PC braucht Update (v3)"), colors.red) return end
   local sig = sha256(CFG.PASSWORT .. "|" .. befehl .. "|" .. wert .. "|" .. nonce)
   rednet.send(q.id, { befehl = befehl, wert = wert, nonce = nonce, sig = sig }, CFG.PROT_WETTER)
   q.daten.nonce = false
-  melden("Gesendet ...", colors.lightGray)
+  melden(L("Gesendet ..."), colors.lightGray)
 end
 
 local function wetterSteuerung(t, x0, y0, W, H, w)
-  panel(t, x0, y0, W, H, "STEUERUNG", colors.cyan)
+  panel(t, x0, y0, W, H, L("STEUERUNG"), colors.cyan)
   local bw = W - 4
   local y = y0 + 2
   -- Welche Celestial Manipulators sind verbaut?
   local da = {}
   for _, f in ipairs(type(w.funktionen) == "table" and w.funktionen or {}) do da[f] = true end
-  local function fehlt() melden("Dafuer ist kein Manipulator verbaut", colors.orange) end
+  local function fehlt() melden(L("Dafuer ist kein Manipulator verbaut"), colors.orange) end
 
   -- Wetter-Knoepfe
-  schreib(t, x0 + 2, y, "Wetter", colors.lightGray, colors.gray)
+  schreib(t, x0 + 2, y, L("Wetter"), colors.lightGray, colors.gray)
   y = y + 1
   local wk = {
-    { "KLAR", "clear", colors.green }, { "REGEN", "rain", colors.black }, { "GEWITTER", "thunder", colors.brown },
+    { L("KLAR"), "clear", colors.green }, { L("REGEN"), "rain", colors.black }, { L("GEWITTER"), "thunder", colors.brown },
   }
   local kb = math.floor((bw - 2) / 3)
   for i, k in ipairs(wk) do
@@ -1467,9 +1727,9 @@ local function wetterSteuerung(t, x0, y0, W, H, w)
   y = y + 4
 
   -- Zeit-Knoepfe
-  schreib(t, x0 + 2, y, "Uhrzeit", colors.lightGray, colors.gray)
+  schreib(t, x0 + 2, y, L("Uhrzeit"), colors.lightGray, colors.gray)
   y = y + 1
-  local zk = { { "MORGEN", "morgen" }, { "MITTAG", "mittag" }, { "ABEND", "abend" }, { "NACHT", "nacht" } }
+  local zk = { { L("MORGEN"), "morgen" }, { L("MITTAG"), "mittag" }, { L("ABEND"), "abend" }, { L("NACHT"), "nacht" } }
   local zb = math.floor((bw - 3) / 4)
   for i, k in ipairs(zk) do
     local x = x0 + 2 + (i - 1) * (zb + 1)
@@ -1483,12 +1743,12 @@ local function wetterSteuerung(t, x0, y0, W, H, w)
   y = y + 4
 
   -- Automatik-Schalter
-  schreib(t, x0 + 2, y, "Automatik", colors.lightGray, colors.gray)
+  schreib(t, x0 + 2, y, L("Automatik"), colors.lightGray, colors.gray)
   y = y + 1
   local auto = type(w.auto) == "table" and w.auto or {}
   local sk = {
-    { "Regen -> klar", "regen", "clear" }, { "Gewitter -> klar", "gewitter", "clear" },
-    { "Nacht ueberspringen", "nacht", "morgen" },
+    { L("Regen -> klar"), "regen", "clear" }, { L("Gewitter -> klar"), "gewitter", "clear" },
+    { L("Nacht ueberspringen"), "nacht", "morgen" },
   }
   for _, k in ipairs(sk) do
     if y + 1 >= y0 + H then break end
@@ -1496,7 +1756,7 @@ local function wetterSteuerung(t, x0, y0, W, H, w)
     local moeglich = da[k[3]] == true
     fuell(t, x0 + 2, y, bw, 1, colors.black)
     schreib(t, x0 + 3, y, k[1], moeglich and colors.white or colors.lightGray, colors.black, bw - 8)
-    local pill = not moeglich and "  --  " or (an and "  AN  " or " AUS  ")
+    local pill = not moeglich and "  --  " or (an and L("  AN  ") or L(" AUS  "))
     schreib(t, x0 + 2 + bw - #pill, y, pill, colors.black, an and colors.lime or colors.lightGray)
     knoepfe[#knoepfe + 1] = { name = t.name, x1 = x0 + 2, y1 = y, x2 = x0 + 1 + bw, y2 = y,
       aktion = moeglich and function() wetterBefehl("auto", k[2] .. "=" .. (an and "0" or "1")) end or fehlt }
@@ -1555,11 +1815,11 @@ function ZEICHNE.flux(t, x0, y0, W, H)
   local liste, summe, aktiv = fluxListe()
 
   -- Kopf-Panel mit Summe
-  panel(t, x0, y0, W, 4, "FLUX-NETZ", colors.cyan)
-  schreib(t, x0 + 2, y0 + 1, "Gesamt-Eingang", colors.lightGray, colors.gray)
+  panel(t, x0, y0, W, 4, L("FLUX-NETZ"), colors.cyan)
+  schreib(t, x0 + 2, y0 + 1, L("Gesamt-Eingang"), colors.lightGray, colors.gray)
   schreib(t, x0 + 2, y0 + 2, kurz(summe, " FE/t"), colors.lime, colors.gray)
-  rechts(t, x0 + W - 2, y0 + 1, "Plugs", colors.lightGray, colors.gray)
-  rechts(t, x0 + W - 2, y0 + 2, aktiv .. " aktiv / " .. #liste, colors.white, colors.gray)
+  rechts(t, x0 + W - 2, y0 + 1, L("Plugs"), colors.lightGray, colors.gray)
+  rechts(t, x0 + W - 2, y0 + 2, aktiv .. L(" aktiv / ") .. #liste, colors.white, colors.gray)
 
   -- Liste
   local ly = y0 + 5
@@ -1572,8 +1832,8 @@ function ZEICHNE.flux(t, x0, y0, W, H)
   local ox = nx + nameB + 1
   local bx = ox + ortB + 1
   local bB = (x0 + W - 2) - bx - wertB
-  schreib(t, nx, ly, "PLUG", colors.cyan, colors.gray)
-  schreib(t, ox, ly, "ORT", colors.cyan, colors.gray)
+  schreib(t, nx, ly, L("PLUG"), colors.cyan, colors.gray)
+  schreib(t, ox, ly, L("ORT"), colors.cyan, colors.gray)
   rechts(t, x0 + W - 2, ly, "FE/t", colors.cyan, colors.gray)
 
   local zeilen = lH - 3
@@ -1583,7 +1843,7 @@ function ZEICHNE.flux(t, x0, y0, W, H)
   for _, pl in ipairs(liste) do if (pl.rate or 0) > maxRate then maxRate = pl.rate end end
 
   if #liste == 0 then
-    schreib(t, nx, ly + 2, "Noch keine Daten von Flux-Sendern.", colors.lightGray, colors.gray)
+    schreib(t, nx, ly + 2, L("Noch keine Daten von Flux-Sendern."), colors.lightGray, colors.gray)
   end
   for i = 1, zeilen do
     local pl = liste[(fluxSeite - 1) * zeilen + i]
@@ -1600,20 +1860,20 @@ function ZEICHNE.flux(t, x0, y0, W, H)
       if (pl.rate or 0) > 0 and voll == 0 then voll = 1 end
       fuell(t, bx, y, voll, 1, colors.lime)
     end
-    rechts(t, x0 + W - 2, y, not pl.frisch and "keine Daten" or kurz(pl.rate),
+    rechts(t, x0 + W - 2, y, not pl.frisch and L("keine Daten") or kurz(pl.rate),
       not pl.frisch and colors.red or ((pl.rate or 0) > 0 and colors.lime or colors.lightGray), bg)
   end
 
   -- Blaettern + Sortierung
   local fy = ly + lH - 1
   fuell(t, x0 + 1, fy, W - 1, 1, colors.gray)
-  knopf(t, x0 + 2, fy, 11, 1, "< ZURUECK", fluxSeite > 1 and colors.cyan or colors.black,
+  knopf(t, x0 + 2, fy, 11, 1, L("< ZURUECK"), fluxSeite > 1 and colors.cyan or colors.black,
     fluxSeite > 1 and colors.black or colors.lightGray, function() if fluxSeite > 1 then fluxSeite = fluxSeite - 1 end end)
-  knopf(t, x0 + W - 12, fy, 10, 1, "WEITER >", fluxSeite < seiten and colors.cyan or colors.black,
+  knopf(t, x0 + W - 12, fy, 10, 1, L("WEITER >"), fluxSeite < seiten and colors.cyan or colors.black,
     fluxSeite < seiten and colors.black or colors.lightGray, function() if fluxSeite < seiten then fluxSeite = fluxSeite + 1 end end)
-  local mitte = "Seite " .. fluxSeite .. "/" .. seiten
+  local mitte = L("Seite ") .. fluxSeite .. "/" .. seiten
   schreib(t, x0 + 15, fy, mitte, colors.white, colors.gray)
-  local sortTxt = fluxSort == "leistung" and "SORT: LEISTUNG" or "SORT: ORT/NAME"
+  local sortTxt = fluxSort == "leistung" and L("SORT: LEISTUNG") or L("SORT: ORT/NAME")
   knopf(t, x0 + 15 + #mitte + 2, fy, #sortTxt + 2, 1, sortTxt, colors.black, colors.white, function()
     fluxSort = (fluxSort == "leistung") and "name" or "leistung"
     fluxSeite = 1
@@ -1635,8 +1895,8 @@ end
 function ZEICHNE.xtreme(t, x0, y0, W, H)
   local l = xtremeListe()
   if #l == 0 then
-    panel(t, x0, y0, W, H, "EXTREME REACTORS", colors.cyan)
-    schreib(t, x0 + 2, y0 + 2, "Keine Daten von Xtreme-Reaktoren.", colors.lightGray, colors.gray, W - 3)
+    panel(t, x0, y0, W, H, L("EXTREME REACTORS"), colors.cyan)
+    schreib(t, x0 + 2, y0 + 2, L("Keine Daten von Xtreme-Reaktoren."), colors.lightGray, colors.gray, W - 3)
     return
   end
   if xtremeAuswahl > #l then xtremeAuswahl = 1 end
@@ -1661,9 +1921,9 @@ function ZEICHNE.xtreme(t, x0, y0, W, H)
 
   -- Links: Messwerte
   local sFarbe = not e.frisch and colors.lightGray or (d.fehler and colors.red or (d.aktiv and colors.lime or colors.lightGray))
-  panel(t, x0, y, lW, hH, "MESSWERTE - " .. e.name:upper(), sFarbe)
+  panel(t, x0, y, lW, hH, L("MESSWERTE - ") .. e.name:upper(), sFarbe)
   if not e.frisch or d.fehler or d.energie == nil and d.brenn == nil then
-    local txt = not e.frisch and "Keine aktuellen Daten." or (d.fehler and ("Fehler: " .. tostring(d.fehler)) or "Startet ...")
+    local txt = not e.frisch and L("Keine aktuellen Daten.") or (d.fehler and (L("Fehler: ") .. tostring(d.fehler)) or L("Startet ..."))
     schreib(t, x0 + 2, y + 2, txt, d.fehler and colors.red or colors.lightGray, colors.gray, lW - 3)
   else
     local bw = lW - 4
@@ -1671,19 +1931,19 @@ function ZEICHNE.xtreme(t, x0, y0, W, H)
     local yy = y + 1
     local zeilen = {}
     if d.aktivKuehl then
-      zeilen[#zeilen + 1] = { "Dampf im Tank", kurz(d.dampf, " mB") .. " / " .. kurz(d.dampfMax, " mB"),
+      zeilen[#zeilen + 1] = { L("Dampf im Tank"), kurz(d.dampf, " mB") .. " / " .. kurz(d.dampfMax, " mB"),
         quote(d.dampf, d.dampfMax), colors.cyan }
-      zeilen[#zeilen + 1] = { "Kuehlmittel", kurz(d.kuehl, " mB") .. " / " .. kurz(d.kuehlMax, " mB"),
+      zeilen[#zeilen + 1] = { L("Kuehlmittel"), kurz(d.kuehl, " mB") .. " / " .. kurz(d.kuehlMax, " mB"),
         quote(d.kuehl, d.kuehlMax), farbeFuer(quote(d.kuehl, d.kuehlMax), 0.5, 0.2, true) }
     else
-      zeilen[#zeilen + 1] = { "Energiespeicher", kurz(d.energie, " FE") .. " / " .. kurz(d.kapazitaet, " FE"),
+      zeilen[#zeilen + 1] = { L("Energiespeicher"), kurz(d.energie, " FE") .. " / " .. kurz(d.kapazitaet, " FE"),
         quote(d.energie, d.kapazitaet), colors.lime }
     end
     local qb = quote(d.brenn, d.brennMax)
-    zeilen[#zeilen + 1] = { "Brennstoff", kurz(d.brenn, " mB") .. " / " .. kurz(d.brennMax, " mB"),
+    zeilen[#zeilen + 1] = { L("Brennstoff"), kurz(d.brenn, " mB") .. " / " .. kurz(d.brennMax, " mB"),
       qb, farbeFuer(qb, 0.25, e.brennWarn or 0.1, true) }
-    zeilen[#zeilen + 1] = { "Abfall", kurz(d.abfall, " mB"), quote(d.abfall, d.brennMax), colors.orange }
-    zeilen[#zeilen + 1] = { "Steuerstaebe", tostring(d.staebe or "--") .. " % drin  (" .. tostring(d.stabAnzahl or "?") .. ")",
+    zeilen[#zeilen + 1] = { L("Abfall"), kurz(d.abfall, " mB"), quote(d.abfall, d.brennMax), colors.orange }
+    zeilen[#zeilen + 1] = { L("Steuerstaebe"), tostring(d.staebe or "--") .. L(" % drin  (") .. tostring(d.stabAnzahl or "?") .. ")",
       (d.staebe or 0) / 100, colors.cyan }
     for _, z in ipairs(zeilen) do
       if yy + 2 > y + hH - 1 then break end
@@ -1692,11 +1952,11 @@ function ZEICHNE.xtreme(t, x0, y0, W, H)
       yy = yy + (gross and 4 or 3)
     end
     local texte = {
-      { d.aktivKuehl and "Dampf-Produktion" or "Produktion",
+      { d.aktivKuehl and L("Dampf-Produktion") or L("Produktion"),
         d.aktivKuehl and kurz(d.dampfProd, " mB/t") or kurz(d.prod, " FE/t"), colors.lime },
-      { "Temperatur", string.format("%.0f C  (Gehaeuse %.0f C)", d.tempBrenn or 0, d.tempGehaeuse or 0), colors.white },
-      { "Verbrauch", string.format("%.3f mB/t", d.verbrauch or 0), colors.white },
-      { "Reaktivitaet", string.format("%.0f %%", d.reaktivitaet or 0), colors.white },
+      { L("Temperatur"), string.format(L("%.0f C  (Gehaeuse %.0f C)"), d.tempBrenn or 0, d.tempGehaeuse or 0), colors.white },
+      { L("Verbrauch"), string.format("%.3f mB/t", d.verbrauch or 0), colors.white },
+      { L("Reaktivitaet"), string.format("%.0f %%", d.reaktivitaet or 0), colors.white },
     }
     for _, z in ipairs(texte) do
       if yy > y + hH - 1 then break end
@@ -1707,19 +1967,19 @@ function ZEICHNE.xtreme(t, x0, y0, W, H)
 
   -- Rechts: Steuerung
   local rx = x0 + lW + 1
-  panel(t, rx, y, rW, hH, "STEUERUNG", sFarbe)
+  panel(t, rx, y, rW, hH, L("STEUERUNG"), sFarbe)
   local bw = rW - 4
   local yy = y + 1
-  local status = not e.frisch and "KEINE DATEN" or (d.fehler and "FEHLER" or (d.aktiv and "LAEUFT" or "AUS"))
+  local status = not e.frisch and L("KEINE DATEN") or (d.fehler and L("FEHLER") or (d.aktiv and L("LAEUFT") or L("AUS")))
   schreib(t, rx + 2, yy, status, sFarbe, colors.gray)
-  rechts(t, rx + rW - 2, yy, d.aktivKuehl and "aktiv gekuehlt" or "passiv", colors.lightGray, colors.gray)
+  rechts(t, rx + rW - 2, yy, d.aktivKuehl and L("aktiv gekuehlt") or L("passiv"), colors.lightGray, colors.gray)
   yy = yy + 2
   local hb = math.floor((bw - 1) / 2)
-  knopf(t, rx + 2, yy, hb, 2, "AN", colors.green, colors.white, function() xtremeBefehl(e.key, "an", "") end)
-  knopf(t, rx + 3 + hb, yy, bw - hb - 1, 2, "AUS", colors.black, colors.white, function() xtremeBefehl(e.key, "aus", "") end)
+  knopf(t, rx + 2, yy, hb, 2, L("AN"), colors.green, colors.white, function() xtremeBefehl(e.key, "an", "") end)
+  knopf(t, rx + 3 + hb, yy, bw - hb - 1, 2, L("AUS"), colors.black, colors.white, function() xtremeBefehl(e.key, "aus", "") end)
   yy = yy + 3
 
-  schreib(t, rx + 2, yy, "Steuerstaebe", colors.lightGray, colors.gray)
+  schreib(t, rx + 2, yy, L("Steuerstaebe"), colors.lightGray, colors.gray)
   rechts(t, rx + rW - 2, yy, tostring(d.staebe or "--") .. " %", colors.cyan, colors.gray)
   yy = yy + 1
   local schritte = { -10, -1, 1, 10 }
@@ -1736,15 +1996,15 @@ function ZEICHNE.xtreme(t, x0, y0, W, H)
 
   local an = d.auto == true
   fuell(t, rx + 2, yy, bw, 1, colors.black)
-  schreib(t, rx + 3, yy, "Automatik", colors.white, colors.black, bw - 7)
-  local pill = an and "  AN  " or " AUS  "
+  schreib(t, rx + 3, yy, L("Automatik"), colors.white, colors.black, bw - 7)
+  local pill = an and L("  AN  ") or L(" AUS  ")
   schreib(t, rx + 2 + bw - #pill, yy, pill, colors.black, an and colors.lime or colors.lightGray)
   knoepfe[#knoepfe + 1] = { name = t.name, x1 = rx + 2, y1 = yy, x2 = rx + 1 + bw, y2 = yy,
     aktion = function() xtremeBefehl(e.key, "auto", an and "0" or "1") end }
   yy = yy + 2
 
   if yy + 1 < y + hH then
-    knopf(t, rx + 2, yy, bw, 1, "ABFALL AUSWERFEN", colors.brown, colors.white, function() xtremeBefehl(e.key, "abfall", "") end)
+    knopf(t, rx + 2, yy, bw, 1, L("ABFALL AUSWERFEN"), colors.brown, colors.white, function() xtremeBefehl(e.key, "abfall", "") end)
     yy = yy + 2
   end
   if rueckmeldung and os.clock() > rueckmeldung.bis then rueckmeldung = nil end
@@ -1776,8 +2036,8 @@ end
 function ZEICHNE.fusion(t, x0, y0, W, H)
   local l = fusionListe()
   if #l == 0 then
-    panel(t, x0, y0, W, H, "FUSIONSREAKTOR", colors.cyan)
-    schreib(t, x0 + 2, y0 + 2, "Keine Daten von Fusion-Reaktoren.", colors.lightGray, colors.gray, W - 3)
+    panel(t, x0, y0, W, H, L("FUSIONSREAKTOR"), colors.cyan)
+    schreib(t, x0 + 2, y0 + 2, L("Keine Daten von Fusion-Reaktoren."), colors.lightGray, colors.gray, W - 3)
     return
   end
   if fusionAuswahl > #l then fusionAuswahl = 1 end
@@ -1802,9 +2062,9 @@ function ZEICHNE.fusion(t, x0, y0, W, H)
   local rW = W - lW - 1
 
   local sFarbe = not e.frisch and colors.lightGray or (d.fehler and colors.red or (d.gezuendet and colors.lime or colors.orange))
-  panel(t, x0, y, lW, hH, "MESSWERTE - " .. e.name:upper(), sFarbe)
+  panel(t, x0, y, lW, hH, L("MESSWERTE - ") .. e.name:upper(), sFarbe)
   if not e.frisch or d.fehler or d.plasma == nil then
-    local txt = not e.frisch and "Keine aktuellen Daten." or (d.fehler and ("Fehler: " .. tostring(d.fehler)) or "Startet ...")
+    local txt = not e.frisch and L("Keine aktuellen Daten.") or (d.fehler and (L("Fehler: ") .. tostring(d.fehler)) or L("Startet ..."))
     schreib(t, x0 + 2, y + 2, txt, d.fehler and colors.red or colors.lightGray, colors.gray, lW - 3)
   else
     local bw = lW - 4
@@ -1814,10 +2074,10 @@ function ZEICHNE.fusion(t, x0, y0, W, H)
     local qG = quote(d.gehaeuse, d.gehaeuseMax)
     local qD = quote(d.dt, d.dtMax)
     local zeilen = {
-      { "Plasma", kurz(d.plasma, " K") .. " / " .. kurz(d.plasmaMax, " K"), qP, farbeFuer(qP, 0.85, 0.95) },
-      { "Gehaeuse", kurz(d.gehaeuse, " K") .. " / " .. kurz(d.gehaeuseMax, " K"), qG, farbeFuer(qG, 0.85, 0.95) },
-      { "D-T-Brennstoff", kurz(d.dt, " mB") .. " / " .. kurz(d.dtMax, " mB"), qD, farbeFuer(qD, 0.25, e.brennWarn or 0.1, true) },
-      { "Injection Rate", tostring(d.rate or "--") .. " / 98  (min " .. tostring(d.rateMin or "?") .. ")",
+      { L("Plasma"), kurz(d.plasma, " K") .. " / " .. kurz(d.plasmaMax, " K"), qP, farbeFuer(qP, 0.85, 0.95) },
+      { L("Gehaeuse"), kurz(d.gehaeuse, " K") .. " / " .. kurz(d.gehaeuseMax, " K"), qG, farbeFuer(qG, 0.85, 0.95) },
+      { L("D-T-Brennstoff"), kurz(d.dt, " mB") .. " / " .. kurz(d.dtMax, " mB"), qD, farbeFuer(qD, 0.25, e.brennWarn or 0.1, true) },
+      { L("Injection Rate"), tostring(d.rate or "--") .. " / 98  (min " .. tostring(d.rateMin or "?") .. ")",
         (d.rate or 0) / 98, colors.cyan },
     }
     for _, z in ipairs(zeilen) do
@@ -1827,9 +2087,9 @@ function ZEICHNE.fusion(t, x0, y0, W, H)
       yy = yy + (gross and 4 or 3)
     end
     local texte = {
-      { "Produktion", kurz(d.prod, " FE/t"), colors.lime },
-      { "Deuterium / Tritium", kurz(d.deut, " mB") .. " / " .. kurz(d.trit, " mB"), colors.white },
-      { "Matrix (fuer Automatik)", type(d.matrix) == "number" and pz(d.matrix) or "keine Daten",
+      { L("Produktion"), kurz(d.prod, " FE/t"), colors.lime },
+      { L("Deuterium / Tritium"), kurz(d.deut, " mB") .. " / " .. kurz(d.trit, " mB"), colors.white },
+      { L("Matrix (fuer Automatik)"), type(d.matrix) == "number" and pz(d.matrix) or L("keine Daten"),
         type(d.matrix) == "number" and colors.white or colors.lightGray },
     }
     for _, z in ipairs(texte) do
@@ -1841,15 +2101,15 @@ function ZEICHNE.fusion(t, x0, y0, W, H)
 
   -- Rechts: Steuerung
   local rx = x0 + lW + 1
-  panel(t, rx, y, rW, hH, "STEUERUNG", sFarbe)
+  panel(t, rx, y, rW, hH, L("STEUERUNG"), sFarbe)
   local bw = rW - 4
   local yy = y + 1
-  local status = not e.frisch and "KEINE DATEN" or (d.fehler and "FEHLER" or (d.gezuendet and "GEZ\220NDET" or "NICHT GEZ\220NDET"))
+  local status = not e.frisch and L("KEINE DATEN") or (d.fehler and L("FEHLER") or (d.gezuendet and L("GEZ\220NDET") or L("NICHT GEZ\220NDET")))
   schreib(t, rx + 2, yy, status, sFarbe, colors.gray, bw)
   yy = yy + 1
   yy = yy + 1
 
-  schreib(t, rx + 2, yy, "Injection Rate", colors.lightGray, colors.gray)
+  schreib(t, rx + 2, yy, L("Injection Rate"), colors.lightGray, colors.gray)
   rechts(t, rx + rW - 2, yy, tostring(d.rate or "--"), colors.cyan, colors.gray)
   yy = yy + 1
   local schritte = { -10, -2, 2, 10 }
@@ -1866,8 +2126,8 @@ function ZEICHNE.fusion(t, x0, y0, W, H)
 
   local an = d.auto == true
   fuell(t, rx + 2, yy, bw, 1, colors.black)
-  schreib(t, rx + 3, yy, "Automatik", colors.white, colors.black, bw - 7)
-  local pill = an and "  AN  " or " AUS  "
+  schreib(t, rx + 3, yy, L("Automatik"), colors.white, colors.black, bw - 7)
+  local pill = an and L("  AN  ") or L(" AUS  ")
   schreib(t, rx + 2 + bw - #pill, yy, pill, colors.black, an and colors.lime or colors.lightGray)
   knoepfe[#knoepfe + 1] = { name = t.name, x1 = rx + 2, y1 = yy, x2 = rx + 1 + bw, y2 = yy,
     aktion = function() fusionBefehl(e.key, "auto", an and "0" or "1") end }
@@ -1878,16 +2138,16 @@ function ZEICHNE.fusion(t, x0, y0, W, H)
   if yy + 1 < y + hH then
     if fusionStopp then
       local hb = math.floor((bw - 1) / 2)
-      knopf(t, rx + 2, yy, hb, 1, "JA, STOPP", colors.red, colors.white, function()
+      knopf(t, rx + 2, yy, hb, 1, L("JA, STOPP"), colors.red, colors.white, function()
         fusionStopp = nil
         fusionBefehl(e.key, "stopp", "")
       end)
-      knopf(t, rx + 3 + hb, yy, bw - hb - 1, 1, "NEIN", colors.black, colors.white, function() fusionStopp = nil end)
+      knopf(t, rx + 3 + hb, yy, bw - hb - 1, 1, L("NEIN"), colors.black, colors.white, function() fusionStopp = nil end)
       yy = yy + 1
-      if yy < y + hH then schreib(t, rx + 2, yy, "Fusion erlischt!", colors.orange, colors.gray, bw) end
+      if yy < y + hH then schreib(t, rx + 2, yy, L("Fusion erlischt!"), colors.orange, colors.gray, bw) end
       yy = yy + 1
     else
-      knopf(t, rx + 2, yy, bw, 1, "STOPP (Injection 0)", colors.brown, colors.white, function()
+      knopf(t, rx + 2, yy, bw, 1, L("STOPP (Injection 0)"), colors.brown, colors.white, function()
         fusionStopp = { key = e.key, bis = os.clock() + 8 }
       end)
       yy = yy + 2
@@ -1898,13 +2158,13 @@ function ZEICHNE.fusion(t, x0, y0, W, H)
   if yy + 5 < y + hH then
     local ld = l and l.daten or {}
     local lFrisch = l and (os.clock() - l.zeit) < 15
-    schreib(t, rx + 2, yy, (l and l.name:upper() or "LASER") .. " (Z\220NDUNG)", colors.cyan, colors.gray, bw)
+    schreib(t, rx + 2, yy, (l and l.name:upper() or L("LASER")) .. L(" (Z\220NDUNG)"), colors.cyan, colors.gray, bw)
     yy = yy + 1
     if not l then
-      schreib(t, rx + 2, yy, "Kein Laser-Computer f\252r " .. e.name, colors.lightGray, colors.gray, bw)
+      schreib(t, rx + 2, yy, L("Kein Laser-Computer f\252r ") .. e.name, colors.lightGray, colors.gray, bw)
       yy = yy + 2
     elseif not lFrisch then
-      schreib(t, rx + 2, yy, "Laser: keine Verbindung", colors.red, colors.gray, bw)
+      schreib(t, rx + 2, yy, L("Laser: keine Verbindung"), colors.red, colors.gray, bw)
       yy = yy + 2
     else
       local q = quote(ld.energie, ld.ziel) or 0
@@ -1914,24 +2174,24 @@ function ZEICHNE.fusion(t, x0, y0, W, H)
       yy = yy + 1
       local kein = (d.hohlraum == false)
       local lst, sf
-      if ld.signal then lst, sf = "Signal AN - Laser feuert ...", colors.orange
-      elseif d.gezuendet then lst, sf = "Signal aus (gez\252ndet)", colors.lime
+      if ld.signal then lst, sf = L("Signal AN - Laser feuert ..."), colors.orange
+      elseif d.gezuendet then lst, sf = L("Signal aus (gez\252ndet)"), colors.lime
       elseif ld.fehler then lst, sf = tostring(ld.fehler), colors.red
-      elseif kein then lst, sf = "Kein Hohlraum im Reaktor!", colors.red
-      elseif voll then lst, sf = "Bereit zum Z\252nden", colors.lime
-      else lst, sf = "L\228dt ...", colors.lightGray end
+      elseif kein then lst, sf = L("Kein Hohlraum im Reaktor!"), colors.red
+      elseif voll then lst, sf = L("Bereit zum Z\252nden"), colors.lime
+      else lst, sf = L("L\228dt ..."), colors.lightGray end
       schreib(t, rx + 2, yy, lst, sf, colors.gray, bw)
       yy = yy + 1
       if d.hohlraum ~= nil and not d.gezuendet then
-        schreib(t, rx + 2, yy, "Hohlraum: " .. (d.hohlraum and "eingelegt" or "FEHLT"),
+        schreib(t, rx + 2, yy, L("Hohlraum: ") .. (d.hohlraum and "eingelegt" or L("FEHLT")),
           d.hohlraum and colors.lightGray or colors.red, colors.gray, bw)
       end
       yy = yy + 1
       -- Auto-Zuendung
       local aan = ld.auto == true
       fuell(t, rx + 2, yy, bw, 1, colors.black)
-      schreib(t, rx + 3, yy, "Auto-Z\252ndung", colors.white, colors.black, bw - 7)
-      local ap = aan and "  AN  " or " AUS  "
+      schreib(t, rx + 3, yy, L("Auto-Z\252ndung"), colors.white, colors.black, bw - 7)
+      local ap = aan and L("  AN  ") or L(" AUS  ")
       schreib(t, rx + 2 + bw - #ap, yy, ap, colors.black, aan and colors.lime or colors.lightGray)
       local lkey = l.key
       knoepfe[#knoepfe + 1] = { name = t.name, x1 = rx + 2, y1 = yy, x2 = rx + 1 + bw, y2 = yy,
@@ -1941,21 +2201,21 @@ function ZEICHNE.fusion(t, x0, y0, W, H)
       if not d.gezuendet and not ld.signal and yy < y + hH then
         if laserFrage then
           local hb = math.floor((bw - 1) / 2)
-          knopf(t, rx + 2, yy, hb, 1, "JA, Z\220NDEN", colors.green, colors.white, function()
+          knopf(t, rx + 2, yy, hb, 1, L("JA, Z\220NDEN"), colors.green, colors.white, function()
             laserFrage = nil
             steuerBefehl(laser, l.key, "zuenden", "")
           end)
-          knopf(t, rx + 3 + hb, yy, bw - hb - 1, 1, "NEIN", colors.black, colors.white, function() laserFrage = nil end)
+          knopf(t, rx + 3 + hb, yy, bw - hb - 1, 1, L("NEIN"), colors.black, colors.white, function() laserFrage = nil end)
         else
           local bereit = voll and not kein
-          knopf(t, rx + 2, yy, bw, 1, bereit and "Z\220NDEN" or (kein and "Z\220NDEN (Hohlraum fehlt)" or "Z\220NDEN (wartet auf Ladung)"),
+          knopf(t, rx + 2, yy, bw, 1, bereit and L("Z\220NDEN") or (kein and L("Z\220NDEN (Hohlraum fehlt)") or L("Z\220NDEN (wartet auf Ladung)")),
             bereit and colors.green or colors.black, bereit and colors.white or colors.lightGray, function()
               if bereit then laserFrage = { key = l.key, bis = os.clock() + 8 } end
             end)
         end
         yy = yy + 2
       elseif ld.signal and yy < y + hH then
-        knopf(t, rx + 2, yy, bw, 1, "ABBRECHEN (Signal aus)", colors.black, colors.white, function()
+        knopf(t, rx + 2, yy, bw, 1, L("ABBRECHEN (Signal aus)"), colors.black, colors.white, function()
           steuerBefehl(laser, l.key, "abbrechen", "")
         end)
         yy = yy + 2
@@ -1999,13 +2259,13 @@ end
 function ZEICHNE.lager(t, x0, y0, W, H)
   local liste, summe, belegt, slots, voll = lagerListe()
 
-  panel(t, x0, y0, W, 4, "LAGER (FUNCTIONAL STORAGE)", voll > 0 and colors.orange or colors.cyan)
-  schreib(t, x0 + 2, y0 + 1, "Items gesamt", colors.lightGray, colors.gray)
+  panel(t, x0, y0, W, 4, L("LAGER (FUNCTIONAL STORAGE)"), voll > 0 and colors.orange or colors.cyan)
+  schreib(t, x0 + 2, y0 + 1, L("Items gesamt"), colors.lightGray, colors.gray)
   schreib(t, x0 + 2, y0 + 2, kurz(summe), colors.white, colors.gray)
   local mx = x0 + math.floor(W / 2) - 8
-  schreib(t, mx, y0 + 1, "Faecher belegt", colors.lightGray, colors.gray)
+  schreib(t, mx, y0 + 1, L("Faecher belegt"), colors.lightGray, colors.gray)
   schreib(t, mx, y0 + 2, belegt .. " / " .. slots, colors.white, colors.gray)
-  rechts(t, x0 + W - 2, y0 + 1, "Fast voll", colors.lightGray, colors.gray)
+  rechts(t, x0 + W - 2, y0 + 1, L("Fast voll"), colors.lightGray, colors.gray)
   rechts(t, x0 + W - 2, y0 + 2, tostring(voll), voll > 0 and colors.orange or colors.lime, colors.gray)
 
   local ly = y0 + 5
@@ -2017,16 +2277,16 @@ function ZEICHNE.lager(t, x0, y0, W, H)
   local limitEnde = mengeEnde + 11
   local bx = limitEnde + 2
   local bB = (x0 + W - 2) - 7 - bx
-  schreib(t, nx, ly, "ITEM", colors.cyan, colors.gray)
-  rechts(t, mengeEnde, ly, "MENGE", colors.cyan, colors.gray)
-  rechts(t, limitEnde, ly, "VON", colors.cyan, colors.gray)
+  schreib(t, nx, ly, L("ITEM"), colors.cyan, colors.gray)
+  rechts(t, mengeEnde, ly, L("MENGE"), colors.cyan, colors.gray)
+  rechts(t, limitEnde, ly, L("VON"), colors.cyan, colors.gray)
   rechts(t, x0 + W - 2, ly, "%", colors.cyan, colors.gray)
 
   local zeilen = lH - 3
   local seiten = math.max(1, math.ceil(#liste / zeilen))
   if lagerSeite > seiten then lagerSeite = seiten end
   if #liste == 0 then
-    schreib(t, nx, ly + 2, "Noch keine Daten vom Lager-Sender.", colors.lightGray, colors.gray)
+    schreib(t, nx, ly + 2, L("Noch keine Daten vom Lager-Sender."), colors.lightGray, colors.gray)
   end
   for i = 1, zeilen do
     local f = liste[(lagerSeite - 1) * zeilen + i]
@@ -2049,13 +2309,13 @@ function ZEICHNE.lager(t, x0, y0, W, H)
 
   local fy = ly + lH - 1
   fuell(t, x0 + 1, fy, W - 1, 1, colors.gray)
-  knopf(t, x0 + 2, fy, 11, 1, "< ZURUECK", lagerSeite > 1 and colors.cyan or colors.black,
+  knopf(t, x0 + 2, fy, 11, 1, L("< ZURUECK"), lagerSeite > 1 and colors.cyan or colors.black,
     lagerSeite > 1 and colors.black or colors.lightGray, function() if lagerSeite > 1 then lagerSeite = lagerSeite - 1 end end)
-  knopf(t, x0 + W - 12, fy, 10, 1, "WEITER >", lagerSeite < seiten and colors.cyan or colors.black,
+  knopf(t, x0 + W - 12, fy, 10, 1, L("WEITER >"), lagerSeite < seiten and colors.cyan or colors.black,
     lagerSeite < seiten and colors.black or colors.lightGray, function() if lagerSeite < seiten then lagerSeite = lagerSeite + 1 end end)
-  local mitte = "Seite " .. lagerSeite .. "/" .. seiten
+  local mitte = L("Seite ") .. lagerSeite .. "/" .. seiten
   schreib(t, x0 + 15, fy, mitte, colors.white, colors.gray)
-  local sortTxt = lagerSort == "fuell" and "SORT: FUELLSTAND" or (lagerSort == "menge" and "SORT: MENGE" or "SORT: NAME")
+  local sortTxt = lagerSort == "fuell" and L("SORT: FUELLSTAND") or (lagerSort == "menge" and L("SORT: MENGE") or L("SORT: NAME"))
   knopf(t, x0 + 15 + #mitte + 2, fy, #sortTxt + 2, 1, sortTxt, colors.black, colors.white, function()
     lagerSort = (lagerSort == "fuell") and "menge" or (lagerSort == "menge" and "name" or "fuell")
     lagerSeite = 1
@@ -2066,31 +2326,31 @@ function ZEICHNE.log(t, x0, y0, W, H)
   -- Update-Computer (nur wenn vorhanden)
   local up = quellen.update
   if up.zeit then
-    panel(t, x0, y0, W, 4, "UPDATES (GITHUB)", colors.cyan)
+    panel(t, x0, y0, W, 4, L("UPDATES (GITHUB)"), colors.cyan)
     local d = up.daten
     local txt, f
-    if not (os.clock() - quellen.update.zeit < 30) then txt, f = "Update-Computer: keine Verbindung", colors.red
-    elseif d.fehler then txt, f = "Fehler: " .. tostring(d.fehler), colors.red
+    if not (os.clock() - quellen.update.zeit < 30) then txt, f = L("Update-Computer: keine Verbindung"), colors.red
+    elseif d.fehler then txt, f = L("Fehler: ") .. tostring(d.fehler), colors.red
     elseif d.letzte then
       local min = math.max(0, math.floor((os.epoch("utc") - d.letzte) / 60000))
-      txt, f = (d.anzahl or 0) .. " Programme - geprueft vor " .. min .. " min", colors.lime
-    else txt, f = "Pruefe GitHub ...", colors.yellow end
+      txt, f = (d.anzahl or 0) .. L(" Programme - geprueft vor ") .. min .. L(" min"), colors.lime
+    else txt, f = L("Pruefe GitHub ..."), colors.yellow end
     schreib(t, x0 + 2, y0 + 1, txt, f, colors.gray, W - 20)
     if type(d.zuletzt) == "table" and #d.zuletzt > 0 and d.zuletztZeit then
       local min = math.max(0, math.floor((os.epoch("utc") - d.zuletztZeit) / 60000))
-      schreib(t, x0 + 2, y0 + 2, "Zuletzt (vor " .. min .. " min): " .. table.concat(d.zuletzt, ", "),
+      schreib(t, x0 + 2, y0 + 2, L("Zuletzt (vor ") .. min .. L(" min): ") .. table.concat(d.zuletzt, ", "),
         colors.lightGray, colors.gray, W - 20)
     end
-    knopf(t, x0 + W - 16, y0 + 1, 14, 2, "UPDATE", colors.cyan, colors.black, function()
+    knopf(t, x0 + W - 16, y0 + 1, 14, 2, L("UPDATE"), colors.cyan, colors.black, function()
       rednet.broadcast(signieren({ typ = "pruefen" }), CFG.NETZ .. "/update")
-      melden("Update-Pruefung angefordert", colors.cyan)
-      log("Update-Pruefung angefordert", colors.cyan)
+      melden(L("Update-Pruefung angefordert"), colors.cyan)
+      log(L("Update-Pruefung angefordert"), colors.cyan)
     end)
     y0, H = y0 + 5, H - 5
   end
-  panel(t, x0, y0, W, H, "EREIGNISPROTOKOLL", colors.cyan)
+  panel(t, x0, y0, W, H, L("EREIGNISPROTOKOLL"), colors.cyan)
   if #logListe == 0 then
-    schreib(t, x0 + 2, y0 + 2, "Noch keine Eintraege.", colors.lightGray, colors.gray)
+    schreib(t, x0 + 2, y0 + 2, L("Noch keine Eintraege."), colors.lightGray, colors.gray)
     return
   end
   for i = 1, math.min(#logListe, H - 2) do
@@ -2114,33 +2374,33 @@ function ZEICHNE.besucher(t, x0, y0, W, H)
     end
   end
   table.sort(alle, function(a, b) return (a.e.zeit or 0) > (b.e.zeit or 0) end)
-  panel(t, x0, y0, W, H, "BETRETUNGSLOG", colors.cyan)
+  panel(t, x0, y0, W, H, L("BETRETUNGSLOG"), colors.cyan)
   -- Log leeren (mit Sicherheitsabfrage)
   if tuerLeeren and os.clock() > tuerLeeren then tuerLeeren = nil end
   if tuerLeeren then
-    schreib(t, x0 + W - 38, y0, "Wirklich l\246schen?", colors.orange, colors.gray)
-    knopf(t, x0 + W - 18, y0, 7, 1, "JA", colors.red, colors.white, function()
+    schreib(t, x0 + W - 38, y0, L("Wirklich l\246schen?"), colors.orange, colors.gray)
+    knopf(t, x0 + W - 18, y0, 7, 1, L("JA"), colors.red, colors.white, function()
       tuerLeeren = nil
       for key in pairs(tueren) do steuerBefehl(tueren, key, "leeren", "") end
     end)
-    knopf(t, x0 + W - 10, y0, 8, 1, "NEIN", colors.black, colors.white, function() tuerLeeren = nil end)
+    knopf(t, x0 + W - 10, y0, 8, 1, L("NEIN"), colors.black, colors.white, function() tuerLeeren = nil end)
   else
-    knopf(t, x0 + W - 16, y0, 14, 1, "LOG LEEREN", colors.black, colors.white, function()
+    knopf(t, x0 + W - 16, y0, 14, 1, L("LOG LEEREN"), colors.black, colors.white, function()
       tuerLeeren = os.clock() + 8
     end)
   end
-  schreib(t, x0 + 2, y0 + 1, "Heute: " .. heute .. "   Gesamt: " .. gesamt .. "   (nur Spieler au\223erhalb des Teams)",
+  schreib(t, x0 + 2, y0 + 1, L("Heute: ") .. heute .. L("   Gesamt: ") .. gesamt .. L("   (nur Spieler au\223erhalb des Teams)"),
     colors.lightGray, colors.gray, W - 3)
   if fehler then schreib(t, x0 + 2, y0 + 2, fehler, colors.red, colors.gray, W - 3) end
   local sp = { x0 + 2, x0 + 14, x0 + 25 }
   local spTuer = x0 + math.max(45, math.floor(W * 0.6))
   local y = y0 + 3
-  schreib(t, sp[1], y, "DATUM", colors.cyan, colors.gray)
-  schreib(t, sp[2], y, "UHRZEIT", colors.cyan, colors.gray)
-  schreib(t, sp[3], y, "SPIELER", colors.cyan, colors.gray)
+  schreib(t, sp[1], y, L("DATUM"), colors.cyan, colors.gray)
+  schreib(t, sp[2], y, L("UHRZEIT"), colors.cyan, colors.gray)
+  schreib(t, sp[3], y, L("SPIELER"), colors.cyan, colors.gray)
   if mehrere > 1 then schreib(t, spTuer, y, "T\220R", colors.cyan, colors.gray) end
   if #alle == 0 then
-    schreib(t, sp[1], y + 2, "Noch niemand Fremdes ist durch die T\252r gegangen.", colors.lime, colors.gray, W - 3)
+    schreib(t, sp[1], y + 2, L("Noch niemand Fremdes ist durch die T\252r gegangen."), colors.lime, colors.gray, W - 3)
     return
   end
   local heuteDatum = alle[1].e.datum
@@ -2170,19 +2430,19 @@ function ZEICHNE.mobfarm(t, x0, y0, W, H)
     local an = d.an and true or false
     local akzent = not frisch and colors.red or (an and colors.lime or colors.lightGray)
     panel(t, x0, y, W, kH, m.name:upper(), akzent)
-    local status = not frisch and "KEINE VERBINDUNG" or (an and "AN - Farmen laufen" or "AUS - Farmen gestoppt")
+    local status = not frisch and L("KEINE VERBINDUNG") or (an and L("AN - Farmen laufen") or L("AUS - Farmen gestoppt"))
     schreib(t, x0 + 2, y + 2, status, akzent, colors.gray, W - 30)
     if d.seit then
-      schreib(t, x0 + 2, y + 4, "Seit " .. tostring(d.seit) .. (d.wer and (" (" .. tostring(d.wer) .. ")") or ""),
+      schreib(t, x0 + 2, y + 4, L("Seit ") .. tostring(d.seit) .. (d.wer and (" (" .. tostring(d.wer) .. ")") or ""),
         colors.lightGray, colors.gray, W - 30)
     end
     local bw = 22
     local key = m.key
     if an then
-      knopf(t, x0 + W - bw - 2, y + 2, bw, 3, "AUSSCHALTEN", colors.black, colors.white,
+      knopf(t, x0 + W - bw - 2, y + 2, bw, 3, L("AUSSCHALTEN"), colors.black, colors.white,
         function() steuerBefehl(mobfarmen, key, "aus", "") end)
     else
-      knopf(t, x0 + W - bw - 2, y + 2, bw, 3, "EINSCHALTEN", colors.green, colors.white,
+      knopf(t, x0 + W - bw - 2, y + 2, bw, 3, L("EINSCHALTEN"), colors.green, colors.white,
         function() steuerBefehl(mobfarmen, key, "an", "") end)
     end
     y = y + kH + 1
@@ -2225,7 +2485,7 @@ end
 local function kopf(t, y)
   fuell(t, 1, y, t.w, 1, colors.gray)
   schreib(t, 2, y, "CORVELYX", colors.cyan, colors.gray)
-  schreib(t, 11, y, "CONTROL CENTER", colors.lightGray, colors.gray)
+  schreib(t, 11, y, L("CONTROL CENTER"), colors.lightGray, colors.gray)
   local name = ""
   for _, s in ipairs(SEITEN) do if s.id == seite then name = s.name end end
   local w = wetterDaten()
@@ -2234,7 +2494,7 @@ local function kopf(t, y)
   rechts(t, t.w - 1, y, rechtsText, colors.white, colors.gray)
   if w then
     local wt, wf = wetterText(w)
-    rechts(t, t.w - 1 - #rechtsText - 3, y, (w.nacht and "NACHT" or "TAG") .. " " .. wt, wf, colors.gray)
+    rechts(t, t.w - 1 - #rechtsText - 3, y, (w.nacht and L("NACHT") or L("TAG")) .. " " .. wt, wf, colors.gray)
   end
 end
 
@@ -2317,7 +2577,7 @@ local function menueMonitor(t)
   if #alarme == 0 then abg = colors.green
   elseif rot then abg = blink and colors.red or colors.brown
   else abg = colors.orange end
-  local atxt = #alarme == 0 and "SYSTEM OK" or (#alarme .. (#alarme == 1 and " ALARM" or " ALARME"))
+  local atxt = #alarme == 0 and L("SYSTEM OK") or (#alarme .. (#alarme == 1 and L(" ALARM") or L(" ALARME")))
   local aty = H - 1
   pille(2, aty, W - 2, abg, 1)
   texte[#texte + 1] = { 2 + math.floor((W - 2 - #atxt) / 2), aty, atxt, colors.white, abg }
@@ -2342,7 +2602,7 @@ local function menueMonitor(t)
     if ty <= unten then
       local aktiv = (s.id == seite)
       local f = aktiv and colors.cyan or colors.gray
-      local label = (#s.name <= bw) and s.name or (s.kurz or s.name:sub(1, bw))
+      local label = (#s.name <= bw) and s.name or ((CFG.SPRACHE == "en" and s.ken) or s.kurz or s.name:sub(1, bw))
       pille(x, ty, bw, f, pad)
       texte[#texte + 1] = { x + math.floor((bw - #label) / 2), ty, label, aktiv and colors.black or colors.white, f }
       knoepfe[#knoepfe + 1] = { name = t.name, x1 = x, y1 = ty - pad, x2 = x + bw - 1, y2 = ty + pad,
@@ -2361,7 +2621,7 @@ local function menueLeiste(t, y)
   for i, s in ipairs(seiten) do
     local aktiv = (s.id == seite)
     local w = (i == #seiten) and (t.w - bw * (#seiten - 1)) or bw
-    local label = (#s.name <= w - 1) and s.name or (s.kurz or s.name:sub(1, w - 1))
+    local label = (#s.name <= w - 1) and s.name or ((CFG.SPRACHE == "en" and s.ken) or s.kurz or s.name:sub(1, w - 1))
     knopf(t, 1 + (i - 1) * bw, y, w, 1, label,
       aktiv and colors.cyan or colors.black, aktiv and colors.black or colors.white,
       function() seite = s.id end)
@@ -2383,8 +2643,8 @@ local function zeichnen()
   ZEICHNE[seite](t, 2, y0, t.w - 2, t.h - y0)
   -- Widmung im unteren Rand
   local herz = string.char(3)
-  local widmung = "In Zusammenarbeit mit den beiden wundervollsten Menschen: Annie & Emi "
-  if #widmung + 1 > t.w - 2 then widmung = "Mit Annie & Emi " end
+  local widmung = L("In Zusammenarbeit mit den beiden wundervollsten Menschen: Annie & Emi ")
+  if #widmung + 1 > t.w - 2 then widmung = L("Mit Annie & Emi ") end
   local wx = math.floor((t.w - #widmung - 1) / 2) + 1
   schreib(t, wx, t.h, widmung, colors.lightGray, colors.black)
   schreib(t, wx + #widmung, t.h, herz, colors.cyan, colors.black)
@@ -2402,7 +2662,7 @@ local function empfangen(id, roh, prot)
     -- Einmal pro Computer melden (z.B. falsches Passwort)
     if type(roh) == "table" and not roh.befehl and not verworfenGemeldet[id] then
       verworfenGemeldet[id] = true
-      log("Ungueltige Nachricht von PC #" .. id .. " verworfen", colors.orange)
+      log(L("Ungueltige Nachricht von PC #") .. id .. L(" verworfen"), colors.orange)
     end
     return
   end
@@ -2413,14 +2673,14 @@ local function empfangen(id, roh, prot)
     elseif msg.typ == "antwort" then
       local farbe = msg.ok and colors.lime or colors.red
       melden(tostring(msg.text), farbe)
-      log("Waechter: " .. tostring(msg.text), msg.ok and colors.lime or colors.orange)
+      log(L("Waechter: ") .. tostring(msg.text), msg.ok and colors.lime or colors.orange)
     end
   elseif (prot == CFG.PROT_XTREME or prot == CFG.PROT_FUSION or prot == CFG.PROT_STEUER) and msg.typ == "antwort" then
     melden(tostring(msg.text), msg.ok and colors.lime or colors.red)
     log(tostring(msg.text), msg.ok and colors.lime or colors.orange)
   elseif prot == CFG.PROT_WETTER and msg.typ == "antwort" then
     melden(tostring(msg.text), msg.ok and colors.lime or colors.red)
-    log("Wetter-PC: " .. tostring(msg.text), msg.ok and colors.lime or colors.orange)
+    log(L("Wetter-PC: ") .. tostring(msg.text), msg.ok and colors.lime or colors.orange)
   elseif prot == CFG.PROT_DATEN and msg.typ == "status" then
     local q = msg.quelle
     if q == "fusion" and type(msg.daten) == "table" then
@@ -2447,7 +2707,7 @@ local function empfangen(id, roh, prot)
         if not tuerGesehen[k] then
           tuerGesehen[k] = true
           if not erstes then
-            log("Besucher: " .. tostring(e.spieler) .. " (" .. name .. ", " .. tostring(e.datum) .. " " .. tostring(e.uhr) .. ")", colors.orange)
+            log(L("Besucher: ") .. tostring(e.spieler) .. " (" .. name .. ", " .. tostring(e.datum) .. " " .. tostring(e.uhr) .. ")", colors.orange)
           end
         end
       end
@@ -2460,7 +2720,7 @@ local function empfangen(id, roh, prot)
       local alt = mobfarmen[key]
       local name = tostring(msg.name or ("Mobfarm PC" .. id))
       if alt and alt.daten.an ~= msg.daten.an then
-        log(name .. ": " .. (msg.daten.an and "AN" or "AUS") .. (msg.daten.wer and (" (" .. tostring(msg.daten.wer) .. ")") or ""),
+        log(name .. ": " .. (msg.daten.an and L("AN") or L("AUS")) .. (msg.daten.wer and (" (" .. tostring(msg.daten.wer) .. ")") or ""),
           msg.daten.an and colors.lime or colors.lightGray)
       end
       mobfarmen[key] = { name = name, daten = msg.daten, zeit = os.clock(), id = id }
@@ -2484,7 +2744,7 @@ local function empfangen(id, roh, prot)
     elseif q and quellen[q] and q ~= "reaktor" and type(msg.daten) == "table" then
       if q == "update" and msg.daten.zuletztZeit and quellen.update.daten
           and quellen.update.daten.zuletztZeit and msg.daten.zuletztZeit ~= quellen.update.daten.zuletztZeit then
-        log("Update verteilt: " .. table.concat(msg.daten.zuletzt or {}, ", "), colors.cyan)
+        log(L("Update verteilt: ") .. table.concat(msg.daten.zuletzt or {}, ", "), colors.cyan)
       end
       quellen[q] = { daten = msg.daten, zeit = os.clock(), id = id }
       if q == "wetter" and ausstehend.wetter then local f = ausstehend.wetter ausstehend.wetter = nil f() end
@@ -2509,22 +2769,22 @@ local function terminalInfo()
   term.setTextColor(colors.cyan)
   print("CORVELYX // CONTROL CENTER")
   term.setTextColor(colors.white)
-  print("Hauptmonitor: " .. HAUPT.name .. " (" .. HAUPT.w .. "x" .. HAUPT.h .. ")")
-  print("Menue: " .. (MENU and (MENU.name .. " (" .. MENU.w .. "x" .. MENU.h .. ")") or "keins - Leiste oben"))
+  print(L("Hauptmonitor: ") .. HAUPT.name .. " (" .. HAUPT.w .. "x" .. HAUPT.h .. ")")
+  print(L("Menue: ") .. (MENU and (MENU.name .. " (" .. MENU.w .. "x" .. MENU.h .. ")") or L("keins - Leiste oben")))
   print("PC #" .. os.getComputerID())
-  print("Netz: " .. CFG.NETZ)
+  print(L("Netz: ") .. CFG.NETZ)
   if CFG.PASSWORT:find("^Hier%-") or CFG.NETZ:find("^Hier%-") then
     term.setTextColor(colors.orange)
     print("")
-    print("Hinweis: NETZ und PASSWORT eintragen!")
+    print(L("Hinweis: NETZ und PASSWORT eintragen!"))
   end
   term.setTextColor(colors.gray)
   print("")
-  print("Strg+T = Beenden")
+  print(L("Strg+T = Beenden"))
 end
 
 -- ---------- Hauptschleife ----------
-log("Control Center gestartet", colors.cyan)
+log(L("Control Center gestartet"), colors.cyan)
 terminalInfo()
 local function hauptschleife()
 local timer = os.startTimer(1)
@@ -2556,7 +2816,7 @@ while true do
     local ok, err = pcall(zeichnen)
     if not ok then
       term.setTextColor(colors.red)
-      print("Zeichenfehler: " .. tostring(err))
+      print(L("Zeichenfehler: ") .. tostring(err))
     end
     timer = os.startTimer(1)
   elseif typ == "monitor_touch" then
@@ -2572,7 +2832,7 @@ end
 end
 
 if chatBoxFinden() then
-  if #chatTeam() > 0 then log("Chat-Alarme aktiv f\252r " .. #chatTeam() .. " Spieler", colors.cyan)
-  else log("Chat Box gefunden - CHAT_TEAM in corvelyx.cfg eintragen", colors.orange) end
+  if #chatTeam() > 0 then log(L("Chat-Alarme aktiv f\252r ") .. #chatTeam() .. L(" Spieler"), colors.cyan)
+  else log(L("Chat Box gefunden - CHAT_TEAM in corvelyx.cfg eintragen"), colors.orange) end
 end
 parallel.waitForAny(hauptschleife, chatAblauf)

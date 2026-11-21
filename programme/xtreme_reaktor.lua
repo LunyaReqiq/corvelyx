@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // XTREME-REAKTOR  v1
+--  CORVELYX // XTREME-REAKTOR  v1.1
 --  Steuerung fuer einen Extreme-Reactors-Reaktor.
 --  Liest alle Werte, funkt sie an Control Center und
 --  Pocket und nimmt gesicherte Befehle an:
@@ -32,6 +32,42 @@ local CFG = {
 }
 -- Einstellungen aus corvelyx.cfg (Update-System) uebernehmen
 if type(CORVELYX_CFG) == "table" then for k, v in pairs(CORVELYX_CFG) do CFG[k] = v end end
+-- Sprache (de/en) - wird vom Update-Computer fuers ganze Netz vorgegeben
+local EN = {
+  ["  (aktiv gekuehlt)"] = "  (actively cooled)",
+  ["  (passiv)"] = "  (passive)",
+  [" (Automatik aus)"] = " (automatic off)",
+  [" Stueck)"] = " pcs)",
+  [" mB   Abfall: "] = " mB   Waste: ",
+  ["AN"] = "ON",
+  ["AN (PC #"] = "ON (PC #",
+  ["AUS"] = "OFF",
+  ["AUS (PC #"] = "OFF (PC #",
+  ["Abfall ausgeworfen"] = "Waste ejected",
+  ["Abfall wird ausgeworfen"] = "Ejecting waste",
+  ["Abgelehnt: PC #"] = "Refused: PC #",
+  ["Automatik "] = "Automatic ",
+  ["Automatik: "] = "Automatic: ",
+  ["Brennstoff: "] = "Fuel: ",
+  ["Energie: "] = "Energy: ",
+  ["Fehler: "] = "Error: ",
+  ["Funk an   Strg+T = Ende"] = "Radio on   Ctrl+T = quit",
+  ["Kein Ender Modem gefunden!"] = "No Ender Modem found!",
+  ["Kein Reactor Computer Port gefunden!"] = "No Reactor Computer Port found!",
+  ["Produktion: "] = "Production: ",
+  ["Reaktor nicht zusammengebaut"] = "Reactor not assembled",
+  ["Reaktor: "] = "Reactor: ",
+  ["Staebe "] = "Rods ",
+  ["Staebe: "] = "Rods: ",
+  ["Startet: "] = "Starting: ",
+  ["Temperatur: %.0f C (Gehaeuse %.0f C)"] = "Temperature: %.0f C (casing %.0f C)",
+  ["Unbekannter Befehl"] = "Unknown command",
+  ["Ungueltiger Wert"] = "Invalid value",
+  ["Zugriff verweigert"] = "Access denied",
+  ["ausgeschaltet"] = "switched off",
+  ["eingeschaltet"] = "switched on",
+}
+local function L(s) if CFG.SPRACHE == "en" then return EN[s] or s end return s end
 CFG.PROT_DATEN  = CFG.NETZ .. "/daten"
 CFG.PROT_XTREME = CFG.NETZ .. "/xtreme"
 
@@ -124,10 +160,10 @@ local function finden()
   end
 end
 local port = finden()
-if not port then error("Kein Reactor Computer Port gefunden!") end
+if not port then error(L("Kein Reactor Computer Port gefunden!")) end
 
 local modem = peripheral.find("modem", function(_, m) return m.isWireless() end)
-if not modem then error("Kein Ender Modem gefunden!") end
+if not modem then error(L("Kein Ender Modem gefunden!")) end
 rednet.open(peripheral.getName(modem))
 
 -- Jedes Mal frisch beim Reaktor nachfragen (Multiblock kann neu formen)
@@ -160,7 +196,7 @@ end
 
 -- ---------- Auslesen ----------
 local function lesen()
-  if r("mbIsAssembled") == false then error("Reaktor nicht zusammengebaut") end
+  if r("mbIsAssembled") == false then error(L("Reaktor nicht zusammengebaut")) end
   local d = {}
   local e = r("getEnergyStats") or {}
   local f = r("getFuelStats") or {}
@@ -238,34 +274,34 @@ local function befehl(id, msg)
      or type(msg.nonce) ~= "string" or type(msg.sig) ~= "string" then return end
   local erwartet = sha256(CFG.PASSWORT .. "|" .. msg.befehl .. "|" .. msg.wert .. "|" .. msg.nonce)
   if not nonceEinloesen(msg.nonce) or msg.sig ~= erwartet then
-    log("Abgelehnt: PC #" .. id)
-    antwort(false, "Zugriff verweigert")
+    log(L("Abgelehnt: PC #") .. id)
+    antwort(false, L("Zugriff verweigert"))
     return
   end
   if msg.befehl == "an" then
-    r("setActive", true) log("AN (PC #" .. id .. ")") antwort(true, "eingeschaltet")
+    r("setActive", true) log(L("AN (PC #") .. id .. ")") antwort(true, L("eingeschaltet"))
   elseif msg.befehl == "aus" then
-    r("setActive", false) log("AUS (PC #" .. id .. ")") antwort(true, "ausgeschaltet")
+    r("setActive", false) log(L("AUS (PC #") .. id .. ")") antwort(true, L("ausgeschaltet"))
   elseif msg.befehl == "stab" then
     local v = tonumber(msg.wert)
-    if not v then antwort(false, "Ungueltiger Wert") return end
+    if not v then antwort(false, L("Ungueltiger Wert")) return end
     v = math.max(0, math.min(100, math.floor(v)))
     r("setAllControlRodLevels", v)
     letzterStab = v
     local hinweis = ""
-    if auto then auto = false speichern() hinweis = " (Automatik aus)" end
-    log("Staebe " .. v .. "%" .. hinweis)
-    antwort(true, "Staebe " .. v .. "%" .. hinweis)
+    if auto then auto = false speichern() hinweis = L(" (Automatik aus)") end
+    log(L("Staebe ") .. v .. "%" .. hinweis)
+    antwort(true, L("Staebe ") .. v .. "%" .. hinweis)
   elseif msg.befehl == "auto" then
     auto = (msg.wert == "1")
     speichern()
     letzterStab = nil
-    log("Automatik " .. (auto and "AN" or "AUS"))
-    antwort(true, "Automatik " .. (auto and "AN" or "AUS"))
+    log(L("Automatik ") .. (auto and L("AN") or L("AUS")))
+    antwort(true, L("Automatik ") .. (auto and L("AN") or L("AUS")))
   elseif msg.befehl == "abfall" then
-    r("doEjectWaste") log("Abfall ausgeworfen") antwort(true, "Abfall wird ausgeworfen")
+    r("doEjectWaste") log(L("Abfall ausgeworfen")) antwort(true, L("Abfall wird ausgeworfen"))
   else
-    antwort(false, "Unbekannter Befehl")
+    antwort(false, L("Unbekannter Befehl"))
   end
 end
 
@@ -289,20 +325,20 @@ local function anzeigen(d, fehler, puffer)
   term.clear()
   zeile(1, "CORVELYX // XTREME-REAKTOR   " .. CFG.NAME, colors.cyan)
   if fehler then
-    zeile(3, (puffer and "Startet: " or "Fehler: ") .. tostring(fehler) .. (puffer and (" (" .. puffer .. " s)") or ""),
+    zeile(3, (puffer and L("Startet: ") or L("Fehler: ")) .. tostring(fehler) .. (puffer and (" (" .. puffer .. " s)") or ""),
       puffer and colors.orange or colors.red)
   elseif d then
-    zeile(3, "Reaktor: " .. (d.aktiv and "AN" or "AUS") .. (d.aktivKuehl and "  (aktiv gekuehlt)" or "  (passiv)"),
+    zeile(3, L("Reaktor: ") .. (d.aktiv and L("AN") or L("AUS")) .. (d.aktivKuehl and L("  (aktiv gekuehlt)") or L("  (passiv)")),
       d.aktiv and colors.lime or colors.lightGray)
-    zeile(4, "Energie: " .. kurz(d.energie) .. " / " .. kurz(d.kapazitaet) .. " FE")
-    zeile(5, "Produktion: " .. kurz(d.prod) .. " FE/t")
-    zeile(6, "Brennstoff: " .. kurz(d.brenn) .. " / " .. kurz(d.brennMax) .. " mB   Abfall: " .. kurz(d.abfall))
-    zeile(7, string.format("Temperatur: %.0f C (Gehaeuse %.0f C)", d.tempBrenn or 0, d.tempGehaeuse or 0))
-    zeile(8, "Staebe: " .. tostring(d.staebe or "--") .. " %  (" .. tostring(d.stabAnzahl) .. " Stueck)")
+    zeile(4, L("Energie: ") .. kurz(d.energie) .. " / " .. kurz(d.kapazitaet) .. " FE")
+    zeile(5, L("Produktion: ") .. kurz(d.prod) .. " FE/t")
+    zeile(6, L("Brennstoff: ") .. kurz(d.brenn) .. " / " .. kurz(d.brennMax) .. L(" mB   Abfall: ") .. kurz(d.abfall))
+    zeile(7, string.format(L("Temperatur: %.0f C (Gehaeuse %.0f C)"), d.tempBrenn or 0, d.tempGehaeuse or 0))
+    zeile(8, L("Staebe: ") .. tostring(d.staebe or "--") .. " %  (" .. tostring(d.stabAnzahl) .. L(" Stueck)"))
   end
-  zeile(10, "Automatik: " .. (auto and "AN" or "aus"), auto and colors.lime or colors.gray)
+  zeile(10, L("Automatik: ") .. (auto and L("AN") or (L("AUS")):lower()), auto and colors.lime or colors.gray)
   for i, l in ipairs(logZeilen) do zeile(11 + i, l, colors.lightGray) end
-  zeile(18, "Funk an   Strg+T = Ende", colors.gray)
+  zeile(18, L("Funk an   Strg+T = Ende"), colors.gray)
 end
 
 -- ---------- Hauptschleife ----------

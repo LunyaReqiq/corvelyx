@@ -10,7 +10,7 @@
 --  "lader" eintippen - oder direkt im Spiel:
 --  wget run https://raw.githubusercontent.com/LunyaReqiq/corvelyx/main/programme/lader.lua
 -- =====================================================
-local LADER_VERSION = "7"
+local LADER_VERSION = "8"
 local CFG_DATEI  = "corvelyx.cfg"
 local LADER_URL  = "https://raw.githubusercontent.com/LunyaReqiq/corvelyx/main/programme/lader.lua"
 local ORDNER     = "corvelyx"
@@ -33,6 +33,65 @@ local PROGRAMME = {
   { "mobfarm.lua",          "CORVELYX // MOBFARM",        "Mobfarm-Schalter (Redstone)" },
   { "laser_zuender.lua",    "CORVELYX // LASER-ZUENDER",  "Laser-Z\252nder (Fusion)" },
 }
+-- Sprache (de/en): gibt der Update-Computer fuers ganze Netz vor
+local SPRACHE, netzSprache = "de", nil
+-- Sprache (de/en) - wird vom Update-Computer fuers ganze Netz vorgegeben
+local EN = {
+  ["Beendet. Neustart mit: reboot"] = "Stopped. Restart with: reboot",
+  ["Benutzername, Repo, Ordner und Token pruefen."] = "Check user name, repo, folder and token.",
+  ["Betretungslog (Player Detector)"] = "Entry log (player detector)",
+  ["Chat-Alarme an (Spieler mit Komma, leer = keine)"] = "Chat alarms to (players, comma separated, empty = none)",
+  ["Control Center (Monitore)"] = "Control Center (monitors)",
+  ["Deine Einstellungen werden uebernommen."] = "Your settings will be kept.",
+  ["Fehler: "] = "Error: ",
+  ["Fertig! Neustart ..."] = "Done! Restarting ...",
+  ["Fission-Waechter"] = "Fission guard",
+  ["Flux-Sender"] = "Flux sender",
+  ["Fusion-Reaktor"] = "Fusion reactor",
+  ["Gefunden: "] = "Found: ",
+  ["GitHub antwortet "] = "GitHub answers ",
+  ["GitHub-Benutzername"] = "GitHub user name",
+  ["GitHub-Zugang (nur auf diesem Computer!)"] = "GitHub access (only on this computer!)",
+  ["Haust\252r"] = "Front door",
+  ["Kein Ender Modem gefunden! Bitte ein Ender Modem an den Computer."] = "No Ender Modem found! Please attach an Ender Modem.",
+  ["Konnte den Lader nicht speichern."] = "Could not save the loader.",
+  ["Lade Update-Server von GitHub ..."] = "Loading update server from GitHub ...",
+  ["Lager-Sender"] = "Storage sender",
+  ["Laser-Z\252nder (Fusion)"] = "Laser igniter (fusion)",
+  ["Mobfarm-Schalter (Redstone)"] = "Mob farm switch (redstone)",
+  ["Mobfarmen"] = "Mob farms",
+  ["Name (Laser 1 geh\246rt zu Fusion 1)"] = "Name (Laser 1 belongs to Fusion 1)",
+  ["Name (wie im Control Center)"] = "Name (as shown in the Control Center)",
+  ["Name (z.B. Matrix 1, leer = automatisch)"] = "Name (e.g. Matrix 1, empty = automatic)",
+  ["Name der T\252r"] = "Name of the door",
+  ["Netzname"] = "Network name",
+  ["Neuer Lader - Neustart"] = "New loader - restarting",
+  ["Neuer Versuch in 30 Sekunden ..."] = "Retrying in 30 seconds ...",
+  ["Neustart in 30 Sekunden (Strg+T = abbrechen)"] = "Restarting in 30 seconds (Ctrl+T = cancel)",
+  ["Nochmal: lader"] = "Try again: lader",
+  ["Nummer"] = "Number",
+  ["Ordner im Repo"] = "Folder in the repo",
+  ["Passwort"] = "Password",
+  ["Pocket Computer"] = "Pocket computer",
+  ["Programm abgestuerzt:"] = "Program crashed:",
+  ["Programm fehlt und kein Update-Computer erreichbar."] = "Program missing and no update computer reachable.",
+  ["Programm: "] = "Program: ",
+  ["Repo-Name"] = "Repo name",
+  ["Seite zum Redstone Link (top/bottom/left/right/front/back)"] = "Side of the Redstone Link (top/bottom/left/right/front/back)",
+  ["Sender (Matrix, Turbine, ME)"] = "Sender (matrix, turbine, ME)",
+  ["Suche Update ... "] = "Checking for update ... ",
+  ["Team-Spieler (werden NICHT geloggt), mit Komma getrennt"] = "Team players (NOT logged), comma separated",
+  ["Token (leer lassen, wenn das Repo \246ffentlich ist)"] = "Token (leave empty if the repo is public)",
+  ["Update-Computer (GitHub)"] = "Update computer (GitHub)",
+  ["Update-Computer nicht erreichbar - starte gespeicherte Version"] = "Update computer not reachable - starting saved version",
+  ["Welches Programm soll dieser Computer haben?"] = "Which program should this computer run?",
+  ["Wetter-PC"] = "Weather PC",
+  ["aktuell"] = "up to date",
+  ["keine Antwort"] = "no answer",
+  ["neue Version geladen"] = "new version loaded",
+  ["nicht im Repo"] = "not in the repo",
+}
+local function L(s) if SPRACHE == "en" then return EN[s] or s end return s end
 -- ---------- SHA-256 (fuer gesicherte Fernbefehle) ----------
 local sha256
 do
@@ -228,6 +287,7 @@ local function nachfragen(datei, hash)
       if id then
         local a = auspacken(id, msg)
         if a and a.typ == "antwort" and a.nonce == nonce and a.datei == datei then
+          if a.sprache == "de" or a.sprache == "en" then netzSprache = a.sprache end
           if a.status == "neu" then
             if type(msg.inhalt) == "string" and sha256(msg.inhalt) == a.hash then
               return "neu", msg.inhalt, a.hash
@@ -253,7 +313,7 @@ local function github(cfg, datei)
   if not r then
     local code = fr and fr.getResponseCode() or nil
     if fr then fr.close() end
-    return nil, code and ("GitHub antwortet " .. code) or tostring(err)
+    return nil, code and (L("GitHub antwortet ") .. code) or tostring(err)
   end
   local s = r.readAll()
   r.close()
@@ -274,6 +334,10 @@ local function einrichten()
   term.clear() term.setCursorPos(1, 1)
   meldung("CORVELYX // EINRICHTUNG", colors.cyan)
   print("")
+  local sp
+  repeat sp = fragen("Sprache / Language (de/en)", "de") until sp == "de" or sp == "en"
+  SPRACHE = sp
+  print("")
   local alt = lesen("startup.lua")
   local selbst = shell and shell.getRunningProgram() or "lader.lua"
   local programm, altCfg
@@ -284,13 +348,13 @@ local function einrichten()
     altCfg = cfgAus(alt)
   end
   if programm then
-    meldung("Gefunden: " .. programm, colors.lime)
-    if altCfg then meldung("Deine Einstellungen werden uebernommen.", colors.lime) end
+    meldung(L("Gefunden: ") .. programm, colors.lime)
+    if altCfg then meldung(L("Deine Einstellungen werden uebernommen."), colors.lime) end
   else
-    print("Welches Programm soll dieser Computer haben?")
-    for i, p in ipairs(PROGRAMME) do print(string.format(" %2d  %s", i, p[3])) end
+    print(L("Welches Programm soll dieser Computer haben?"))
+    for i, p in ipairs(PROGRAMME) do print(string.format(" %2d  %s", i, L(p[3]))) end
     while not programm do
-      local n = tonumber(fragen("Nummer"))
+      local n = tonumber(fragen(L("Nummer")))
       if n and PROGRAMME[n] then programm = PROGRAMME[n][1] end
     end
   end
@@ -298,18 +362,19 @@ local function einrichten()
   local cfg = {}
   if altCfg then for k, v in pairs(altCfg) do cfg[k] = v end end
   cfg.PROGRAMM = programm
+  cfg.SPRACHE = SPRACHE
   if not altCfg or not altCfg.NETZ or altCfg.NETZ:find("Hier%-") then
-    cfg.NETZ = fragen("Netzname")
-    cfg.PASSWORT = fragen("Passwort", nil, true)
+    cfg.NETZ = fragen(L("Netzname"))
+    cfg.PASSWORT = fragen(L("Passwort"), nil, true)
   end
   if not altCfg then
     if programm == "corvelyx_sender.lua" or programm == "fusion_reaktor.lua" or programm == "xtreme_reaktor.lua" then
-      local n = fragen("Name (z.B. Matrix 1, leer = automatisch)")
+      local n = fragen(L("Name (z.B. Matrix 1, leer = automatisch)"))
       cfg.NAME = (n and n ~= "") and n or nil
     end
   end
   if programm == "corvelyx_cc.lua" then
-    local t = fragen("Chat-Alarme an (Spieler mit Komma, leer = keine)")
+    local t = fragen(L("Chat-Alarme an (Spieler mit Komma, leer = keine)"))
     local team = {}
     for roh in tostring(t or ""):gmatch("[^,]+") do
       local n = roh:gsub("^%s+", ""):gsub("%s+$", "")
@@ -318,19 +383,19 @@ local function einrichten()
     if #team > 0 then cfg.CHAT_TEAM = team end
   end
   if programm == "laser_zuender.lua" and not altCfg then
-    cfg.NAME = fragen("Name (Laser 1 geh\246rt zu Fusion 1)", "Laser 1")
+    cfg.NAME = fragen(L("Name (Laser 1 geh\246rt zu Fusion 1)"), "Laser 1")
   end
   if programm == "mobfarm.lua" and not altCfg then
-    cfg.NAME = fragen("Name (wie im Control Center)", "Mobfarmen")
+    cfg.NAME = fragen(L("Name (wie im Control Center)"), L("Mobfarmen"))
     local s
     repeat
-      s = fragen("Seite zum Redstone Link (top/bottom/left/right/front/back)", "back")
+      s = fragen(L("Seite zum Redstone Link (top/bottom/left/right/front/back)"), "back")
     until s == "top" or s == "bottom" or s == "left" or s == "right" or s == "front" or s == "back"
     cfg.SEITE = s
   end
   if programm == "tuer_sender.lua" and not altCfg then
-    cfg.NAME = fragen("Name der T\252r", "Haust\252r")
-    local t = fragen("Team-Spieler (werden NICHT geloggt), mit Komma getrennt")
+    cfg.NAME = fragen(L("Name der T\252r"), L("Haust\252r"))
+    local t = fragen(L("Team-Spieler (werden NICHT geloggt), mit Komma getrennt"))
     cfg.TEAM = {}
     for roh in tostring(t or ""):gmatch("[^,]+") do
       local n = roh:gsub("^%s+", ""):gsub("%s+$", "")
@@ -339,12 +404,12 @@ local function einrichten()
   end
   if programm == UPDATE_SERVER then
     print("")
-    meldung("GitHub-Zugang (nur auf diesem Computer!)", colors.cyan)
-    cfg.GITHUB_BENUTZER = fragen("GitHub-Benutzername", "LunyaReqiq")
-    cfg.REPO   = fragen("Repo-Name", "corvelyx")
+    meldung(L("GitHub-Zugang (nur auf diesem Computer!)"), colors.cyan)
+    cfg.GITHUB_BENUTZER = fragen(L("GitHub-Benutzername"), "LunyaReqiq")
+    cfg.REPO   = fragen(L("Repo-Name"), "corvelyx")
     cfg.BRANCH = fragen("Branch", "main")
-    cfg.ORDNER = fragen("Ordner im Repo", "programme")
-    cfg.TOKEN  = fragen("Token (leer lassen, wenn das Repo \246ffentlich ist)", nil, true) or ""
+    cfg.ORDNER = fragen(L("Ordner im Repo"), "programme")
+    cfg.TOKEN  = fragen(L("Token (leer lassen, wenn das Repo \246ffentlich ist)"), nil, true) or ""
   end
   cfg._ABGLEICH = altCfg and true or nil   -- nur geaenderte Werte behalten, sobald neue Version da ist
 
@@ -355,12 +420,12 @@ local function einrichten()
   end
   CFG = cfg
   if programm == UPDATE_SERVER then
-    meldung("Lade Update-Server von GitHub ...", colors.lightGray)
+    meldung(L("Lade Update-Server von GitHub ..."), colors.lightGray)
     local s, err = github(cfg, UPDATE_SERVER)
     if not s then
-      meldung("Fehler: " .. tostring(err), colors.red)
-      meldung("Benutzername, Repo, Ordner und Token pruefen.", colors.red)
-      meldung("Nochmal: lader", colors.red)
+      meldung(L("Fehler: ") .. tostring(err), colors.red)
+      meldung(L("Benutzername, Repo, Ordner und Token pruefen."), colors.red)
+      meldung(L("Nochmal: lader"), colors.red)
       return
     end
     schreiben(ORDNER .. "/" .. UPDATE_SERVER, s)
@@ -376,11 +441,11 @@ local function einrichten()
     schreiben("startup.lua", ich)
   end
   if not fs.exists("startup.lua") then
-    meldung("Konnte den Lader nicht speichern.", colors.red)
+    meldung(L("Konnte den Lader nicht speichern."), colors.red)
     return
   end
   print("")
-  meldung("Fertig! Neustart ...", colors.lime)
+  meldung(L("Fertig! Neustart ..."), colors.lime)
   sleep(2)
   os.reboot()
 end
@@ -393,6 +458,7 @@ end
 local cfg = cfgLaden()
 if not cfg or not cfg.PROGRAMM then einrichten() return end
 CFG = cfg
+SPRACHE = (cfg.SPRACHE == "en") and "en" or "de"
 math.randomseed(os.epoch("utc") + os.getComputerID())
 local PROG = cfg.PROGRAMM
 local pfad = ORDNER .. "/" .. PROG
@@ -400,9 +466,9 @@ fs.makeDir(ORDNER)
 
 term.clear() term.setCursorPos(1, 1)
 meldung("CORVELYX // LADER v" .. LADER_VERSION, colors.cyan)
-print("Programm: " .. PROG)
+print(L("Programm: ") .. PROG)
 local hatModem = modemOeffnen()
-if not hatModem then meldung("Kein Ender Modem gefunden! Bitte ein Ender Modem an den Computer.", colors.red) end
+if not hatModem then meldung(L("Kein Ender Modem gefunden! Bitte ein Ender Modem an den Computer."), colors.red) end
 
 local function hashVon(p) local s = lesen(p) return s and sha256(s) or nil end
 local meinHash = hashVon(pfad)
@@ -412,25 +478,25 @@ if PROG ~= UPDATE_SERVER and hatModem then
   -- 1. Lader selbst aktuell?
   local st, inhalt = nachfragen("lader.lua", laderHash)
   if st == "neu" then
-    meldung("Neuer Lader - Neustart", colors.lime)
+    meldung(L("Neuer Lader - Neustart"), colors.lime)
     schreiben("startup.lua", inhalt)
     sleep(1)
     os.reboot()
   end
   -- 2. Programm aktuell?
   if st then
-    write("Suche Update ... ")
+    write(L("Suche Update ... "))
     local st2, inhalt2, h2 = nachfragen(PROG, meinHash)
     if st2 == "neu" then
       schreiben(pfad, inhalt2)
       meinHash = h2
-      meldung("neue Version geladen", colors.lime)
+      meldung(L("neue Version geladen"), colors.lime)
     elseif st2 == "aktuell" then
-      meldung("aktuell", colors.lime)
+      meldung(L("aktuell"), colors.lime)
     elseif st2 == "unbekannt" then
-      meldung("nicht im Repo", colors.orange)
+      meldung(L("nicht im Repo"), colors.orange)
     else
-      meldung("keine Antwort", colors.orange)
+      meldung(L("keine Antwort"), colors.orange)
     end
     -- Einstellungen entruempeln: nur behalten, was von der Vorgabe abweicht
     if cfg._ABGLEICH and (st2 == "neu" or st2 == "aktuell") then
@@ -446,13 +512,19 @@ if PROG ~= UPDATE_SERVER and hatModem then
       end
     end
   else
-    meldung("Update-Computer nicht erreichbar - starte gespeicherte Version", colors.orange)
+    meldung(L("Update-Computer nicht erreichbar - starte gespeicherte Version"), colors.orange)
+  end
+  -- Netzsprache vom Update-Computer uebernehmen
+  if netzSprache and netzSprache ~= (cfg.SPRACHE or "de") then
+    cfg.SPRACHE = netzSprache
+    SPRACHE = netzSprache
+    cfgSpeichern(cfg)
   end
 end
 
 if not fs.exists(pfad) then
-  meldung("Programm fehlt und kein Update-Computer erreichbar.", colors.red)
-  meldung("Neuer Versuch in 30 Sekunden ...", colors.red)
+  meldung(L("Programm fehlt und kein Update-Computer erreichbar."), colors.red)
+  meldung(L("Neuer Versuch in 30 Sekunden ..."), colors.red)
   sleep(30)
   os.reboot()
 end
@@ -465,6 +537,13 @@ local function updateWaechter()
     local _, id, msg, p = os.pullEvent("rednet_message")
     if p == prot then
       local a = auspacken(id, msg)
+      -- Sprache im Netz geaendert -> uebernehmen und neu starten
+      if a and a.typ == "neustart" and (a.sprache == "de" or a.sprache == "en")
+        and PROG ~= UPDATE_SERVER and a.sprache ~= (cfg.SPRACHE or "de") then
+        cfg.SPRACHE = a.sprache
+        cfgSpeichern(cfg)
+        os.reboot()
+      end
       if a and a.typ == "neustart" and type(a.dateien) == "table" then
         local neu = a.dateien[PROG]
         local neuLader = a.dateien["lader.lua"]
@@ -493,16 +572,16 @@ end
 parallel.waitForAny(programm, updateWaechter)
 if beendet then
   term.redirect(term.native())
-  farbe(colors.yellow) print("Beendet. Neustart mit: reboot") farbe(colors.white)
+  farbe(colors.yellow) print(L("Beendet. Neustart mit: reboot")) farbe(colors.white)
   return
 end
 term.redirect(term.native())
 term.setBackgroundColor(colors.black)
 term.clear() term.setCursorPos(1, 1)
 meldung("CORVELYX // " .. PROG, colors.cyan)
-meldung("Programm abgestuerzt:", colors.red)
+meldung(L("Programm abgestuerzt:"), colors.red)
 meldung(tostring(fehler or "beendet"), colors.red)
 print("")
-print("Neustart in 30 Sekunden (Strg+T = abbrechen)")
+print(L("Neustart in 30 Sekunden (Strg+T = abbrechen)"))
 parallel.waitForAny(function() sleep(30) end, updateWaechter)
 os.reboot()

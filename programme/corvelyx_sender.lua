@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // SENDER  v1.8
+--  CORVELYX // SENDER  v1.9
 --  Liest eine Anlage aus und funkt die Werte per
 --  Ender Modem an das Control Center.
 --
@@ -30,6 +30,19 @@ local CFG = {
 }
 -- Einstellungen aus corvelyx.cfg (Update-System) uebernehmen
 if type(CORVELYX_CFG) == "table" then for k, v in pairs(CORVELYX_CFG) do CFG[k] = v end end
+-- Sprache (de/en) - wird vom Update-Computer fuers ganze Netz vorgegeben
+local EN = {
+  [" s. Strg+T = Ende"] = " s. Ctrl+T = quit",
+  ["Fehler: "] = "Error: ",
+  ["Kein Ender Modem gefunden!"] = "No Ender Modem found!",
+  ["Keine Anlage gefunden! (Induction Port, Turbine Valve oder ME Bridge)"] = "No device found! (Induction Port, Turbine Valve or ME Bridge)",
+  ["Matrix nicht geformt"] = "Matrix not formed",
+  ["Quelle: "] = "Source: ",
+  ["Sendet jede "] = "Sending every ",
+  ["Startet: "] = "Starting: ",
+  ["Turbine nicht geformt"] = "Turbine not formed",
+}
+local function L(s) if CFG.SPRACHE == "en" then return EN[s] or s end return s end
 
 CFG.PROTOKOLL = CFG.NETZ .. "/daten"
 
@@ -179,18 +192,18 @@ for _, eintrag in ipairs(TYPEN) do
   if quelle then break end
 end
 if not quelle then
-  error("Keine Anlage gefunden! (Induction Port, Turbine Valve oder ME Bridge)")
+  error(L("Keine Anlage gefunden! (Induction Port, Turbine Valve oder ME Bridge)"))
 end
 
 local modem = peripheral.find("modem", function(_, m) return m.isWireless() end)
-if not modem then error("Kein Ender Modem gefunden!") end
+if not modem then error(L("Kein Ender Modem gefunden!")) end
 rednet.open(peripheral.getName(modem))
 
 -- ---------- Auslesen ----------
 local LESER = {}
 
 function LESER.matrix(d)
-  if p(d, "isFormed") == false then error("Matrix nicht geformt") end
+  if p(d, "isFormed") == false then error(L("Matrix nicht geformt")) end
   return {
     energie = fe(p(d, "getEnergy")),
     max     = fe(p(d, "getMaxEnergy")),
@@ -202,7 +215,7 @@ function LESER.matrix(d)
 end
 
 function LESER.turbine(d)
-  if p(d, "isFormed") == false then error("Turbine nicht geformt") end
+  if p(d, "isFormed") == false then error(L("Turbine nicht geformt")) end
   return {
     produktion = fe(p(d, "getProductionRate")),
     maxProd    = fe(p(d, "getMaxProduction")),
@@ -270,17 +283,17 @@ local function anzeigen()
   term.setTextColor(colors.cyan)
   print("CORVELYX // SENDER")
   term.setTextColor(colors.white)
-  print("Quelle: " .. quelle .. "   PC #" .. os.getComputerID())
+  print(L("Quelle: ") .. quelle .. "   PC #" .. os.getComputerID())
   for _, e in ipairs(eintraege) do
     print("")
     term.setTextColor(colors.white)
     print("[" .. e.name .. "]")
     if e.fehler and e.puffer then
       term.setTextColor(colors.orange)
-      print("Startet: " .. tostring(e.fehler) .. " (" .. e.puffer .. " s)")
+      print(L("Startet: ") .. tostring(e.fehler) .. " (" .. e.puffer .. " s)")
     elseif e.fehler then
       term.setTextColor(colors.red)
-      print("Fehler: " .. tostring(e.fehler))
+      print(L("Fehler: ") .. tostring(e.fehler))
     elseif e.daten then
       term.setTextColor(colors.lightGray)
       local namen = {}
@@ -293,7 +306,7 @@ local function anzeigen()
   end
   term.setTextColor(colors.gray)
   print("")
-  print("Sendet jede " .. CFG.INTERVALL .. " s. Strg+T = Ende")
+  print(L("Sendet jede ") .. CFG.INTERVALL .. L(" s. Strg+T = Ende"))
 end
 
 -- ---------- Hauptschleife ----------

@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // FLUX-SENDER  v1
+--  CORVELYX // FLUX-SENDER  v1.1
 --  Liest alle Energy Detectors (Advanced Peripherals), die
 --  vor Flux Plugs sitzen, und funkt den Durchfluss (FE/t)
 --  an das Flux-Panel.
@@ -33,6 +33,16 @@ local CFG = {
 }
 -- Einstellungen aus corvelyx.cfg (Update-System) uebernehmen
 if type(CORVELYX_CFG) == "table" then for k, v in pairs(CORVELYX_CFG) do CFG[k] = v end end
+-- Sprache (de/en) - wird vom Update-Computer fuers ganze Netz vorgegeben
+local EN = {
+  [" Detector(s)   Summe: "] = " detector(s)   total: ",
+  [" weitere"] = " more",
+  ["... und "] = "... and ",
+  ["FEHLER"] = "ERROR",
+  ["Kein Ender Modem gefunden!"] = "No Ender Modem found!",
+  ["Strg+T = Beenden"] = "Ctrl+T = quit",
+}
+local function L(s) if CFG.SPRACHE == "en" then return EN[s] or s end return s end
 
 CFG.PROTOKOLL = CFG.NETZ .. "/daten"
 
@@ -138,7 +148,7 @@ local function anzeigeName(n, i)
 end
 
 local modem = peripheral.find("modem", function(_, m) return m.isWireless() end)
-if not modem then error("Kein Ender Modem gefunden!") end
+if not modem then error(L("Kein Ender Modem gefunden!")) end
 rednet.open(peripheral.getName(modem))
 
 local gesetzt = {}
@@ -179,16 +189,16 @@ while true do
   term.setTextColor(colors.cyan)
   print("CORVELYX // FLUX-SENDER   Ort: " .. CFG.ORT)
   term.setTextColor(colors.white)
-  print(#plugs .. " Detector(s)   Summe: " .. kurz(summe) .. " FE/t")
+  print(#plugs .. L(" Detector(s)   Summe: ") .. kurz(summe) .. " FE/t")
   print("")
   local _, h = term.getSize()
   for i, pl in ipairs(plugs) do
-    if i > h - 5 then term.setTextColor(colors.gray) print("... und " .. (#plugs - i + 1) .. " weitere") break end
+    if i > h - 5 then term.setTextColor(colors.gray) print(L("... und ") .. (#plugs - i + 1) .. L(" weitere")) break end
     term.setTextColor(pl.rate and (pl.rate > 0 and colors.lime or colors.lightGray) or colors.red)
-    print(string.format("%-18s %-18s %s", pl.id:sub(1, 18), pl.name:sub(1, 18), pl.rate and kurz(pl.rate) or "FEHLER"))
+    print(string.format("%-18s %-18s %s", pl.id:sub(1, 18), pl.name:sub(1, 18), pl.rate and kurz(pl.rate) or L("FEHLER")))
   end
   term.setTextColor(colors.gray)
   term.setCursorPos(1, h)
-  term.write("Strg+T = Beenden")
+  term.write(L("Strg+T = Beenden"))
   sleep(CFG.INTERVALL)
 end
