@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // FUSION-REAKTOR  v1.1
+--  CORVELYX // FUSION-REAKTOR  v1.2
 --  Steuerung fuer den Mekanism-Fusionsreaktor.
 --  Liest alle Werte, funkt sie an Control Center und
 --  Pocket und nimmt gesicherte Befehle an:
@@ -202,6 +202,11 @@ local function lesen()
   local aktiv = r("isActiveCooledLogic") == true
   d.aktivKuehl   = aktiv
   d.gezuendet    = r("isIgnited") == true
+  -- Hohlraum im Reaktor? (nil = nicht abfragbar)
+  local h = r("getHohlraum")
+  if type(h) == "table" then
+    d.hohlraum = (tonumber(h.count) or 0) > 0 and tostring(h.name or ""):find("hohlraum") ~= nil
+  end
   d.plasma       = r("getPlasmaTemperature")
   d.gehaeuse     = r("getCaseTemperature")
   d.plasmaMax    = r("getMaxPlasmaTemperature", aktiv)

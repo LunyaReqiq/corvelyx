@@ -15,7 +15,7 @@ Reaktoren, Energiespeicher, ME-System, Wetter, Mobfarmen und Besucher auf einen 
 |---|---|
 | **Control Center** | Touch-Bedienung auf großen Monitoren mit Menü-Monitor daneben. Startseite mit Kacheln für alle Anlagen und aktiven Alarmen. Seiten erscheinen nur für Systeme, die wirklich angeschlossen sind. |
 | **Fission** | Reaktor-Wächter mit automatischer Notabschaltung (SCRAM) bei Hitze, Schaden, Kühlmangel oder vollem Abfall. Start, Stop und Not-Aus aus der Ferne. |
-| **Fusion** | Mehrere Mekanism-Fusionsreaktoren mit Plasma, Gehäuse, D-T-Brennstoff und Injection Rate. Automatik regelt die Leistung nach dem Füllstand der Matrizen. |
+| **Fusion** | Mehrere Mekanism-Fusionsreaktoren mit Plasma, Gehäuse, D-T-Brennstoff und Injection Rate. Automatik regelt die Leistung nach dem Füllstand der Matrizen. Zünden per Laser auf Knopfdruck oder automatisch, mit Hohlraum-Prüfung und Zeitlimit. |
 | **Extreme Reactors** | Leistung, Brennstoff, Steuerstäbe und Automatik pro Reaktor. |
 | **Matrix** | Beliebig viele Induction Matrizen mit Gesamt-Ansicht (Speicher, Eingang, Ausgang, Netto, Zeit bis voll oder leer) und Verlauf. |
 | **Turbinen** | Produktion und Dampf jeder Turbine. |
@@ -113,6 +113,7 @@ GitHub ──> Update-Computer ──Funknetz, signiert──> alle Corvelyx-Com
 | `corvelyx_wetter.lua` | Wetter-PC (Celestial Manipulators) |
 | `tuer_sender.lua` | Betretungslog: Player Detector an der Tür |
 | `mobfarm.lua` | Mobfarm-Schalter: dauerhaftes Redstone-Signal zum Create Redstone Link |
+| `laser_zuender.lua` | Laser-Zünder am Laser Amplifier („Laser 1“ gehört zu „Fusion 1“) |
 
 ## Einstellungen ändern
 

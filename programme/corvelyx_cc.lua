@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // CONTROL CENTER  v3.4
+--  CORVELYX // CONTROL CENTER  v3.5
 --
 --  Aufbau:
 --   - Advanced Computer mit Ender Modem
@@ -195,6 +195,8 @@ local lagerSender = {} -- [schluessel] = { ort, faecher, slots, zeit }
 local tueren = {}      -- [schluessel] = { name, daten, zeit, id } (Betretungslog)
 local tuerGesehen = {} -- bereits gemeldete Eintraege
 local mobfarmen = {}   -- [schluessel] = { name, daten, zeit, id }
+local laser = {}       -- [schluessel] = { name, daten, zeit, id } (Laser-Zuender)
+local laserFrage = nil -- Sicherheitsabfrage "Zuenden"
 local tuerLeeren = nil -- Sicherheitsabfrage "Log leeren" (Ablaufzeit)
 local lagerSeite, lagerSort = 1, "fuell"
 local xtreme = {}     -- Extreme Reactors: [schluessel] = { name, daten, zeit, id }
@@ -514,6 +516,7 @@ local function aufraeumen()
   tabelle(lagerSender, "Lager")
   tabelle(tueren, "T\252r")
   tabelle(mobfarmen, "Mobfarm")
+  tabelle(laser, "Laser")
   tabelle(xtreme, "Xtreme")
   tabelle(fusion, "Fusion")
 end
@@ -565,6 +568,9 @@ local function alarmeBerechnen()
   end
 
   -- Matrix
+  for key, l in pairs(laser) do
+    if l.daten.fehler and (os.clock() - l.zeit) < 15 then add("laser_" .. key, l.name .. ": " .. tostring(l.daten.fehler), 1) end
+  end
   local up = quellen.update
   if up.zeit and (os.clock() - quellen.update.zeit < 30) and up.daten.fehler then
     add("upd_err", "Update-Computer: " .. tostring(up.daten.fehler), 1)
@@ -849,7 +855,7 @@ function ZEICHNE.uebersicht(t, x0, y0, W, H)
         if q and (not minDT or q < minDT) then minDT = q end
       end
     end
-    kacheln[#kacheln + 1] = { "FUSION (" .. an .. "/" .. alle .. ")", an > 0 and (an .. " GEZUENDET") or "NICHT GEZUENDET",
+    kacheln[#kacheln + 1] = { "FUSION (" .. an .. "/" .. alle .. ")", an > 0 and (an .. " GEZ\220NDET") or "NICHT GEZ\220NDET",
       an > 0 and colors.lime or colors.orange, minDT, nil,
       "Leistung: " .. kurz(prod, " FE/t"), "D-T min: " .. pz(minDT), "fusion" }
   end
@@ -1627,6 +1633,14 @@ local function fusionListe()
   return l
 end
 
+local function laserFuer(fusionName)
+  local nr = tostring(fusionName):match("(%d+)%s*$")
+  if not nr then return nil end
+  for key, l in pairs(laser) do
+    if l.name:match("(%d+)%s*$") == nr then l.key = key return l end
+  end
+end
+
 function ZEICHNE.fusion(t, x0, y0, W, H)
   local l = fusionListe()
   if #l == 0 then
@@ -1698,13 +1712,10 @@ function ZEICHNE.fusion(t, x0, y0, W, H)
   panel(t, rx, y, rW, hH, "STEUERUNG", sFarbe)
   local bw = rW - 4
   local yy = y + 1
-  local status = not e.frisch and "KEINE DATEN" or (d.fehler and "FEHLER" or (d.gezuendet and "GEZUENDET" or "NICHT GEZUENDET"))
+  local status = not e.frisch and "KEINE DATEN" or (d.fehler and "FEHLER" or (d.gezuendet and "GEZ\220NDET" or "NICHT GEZ\220NDET"))
   schreib(t, rx + 2, yy, status, sFarbe, colors.gray, bw)
   yy = yy + 1
-  if e.frisch and not d.fehler and not d.gezuendet then
-    schreib(t, rx + 2, yy, "Zuenden nur per Laser", colors.lightGray, colors.gray, bw)
-  end
-  yy = yy + 2
+  yy = yy + 1
 
   schreib(t, rx + 2, yy, "Injection Rate", colors.lightGray, colors.gray)
   rechts(t, rx + rW - 2, yy, tostring(d.rate or "--"), colors.cyan, colors.gray)
@@ -1748,6 +1759,75 @@ function ZEICHNE.fusion(t, x0, y0, W, H)
         fusionStopp = { key = e.key, bis = os.clock() + 8 }
       end)
       yy = yy + 2
+    end
+  end
+  -- Laser-Zuendung (Laser N gehoert zu Fusion N)
+  local l = laserFuer(e.name)
+  if yy + 5 < y + hH then
+    local ld = l and l.daten or {}
+    local lFrisch = l and (os.clock() - l.zeit) < 15
+    schreib(t, rx + 2, yy, (l and l.name:upper() or "LASER") .. " (Z\220NDUNG)", colors.cyan, colors.gray, bw)
+    yy = yy + 1
+    if not l then
+      schreib(t, rx + 2, yy, "Kein Laser-Computer f\252r " .. e.name, colors.lightGray, colors.gray, bw)
+      yy = yy + 2
+    elseif not lFrisch then
+      schreib(t, rx + 2, yy, "Laser: keine Verbindung", colors.red, colors.gray, bw)
+      yy = yy + 2
+    else
+      local q = quote(ld.energie, ld.ziel) or 0
+      local voll = q >= 1
+      balken(t, rx + 2, yy, bw - 12, math.min(1, q), voll and colors.lime or colors.orange)
+      rechts(t, rx + rW - 2, yy, kurz(ld.energie, "") .. "/" .. kurz(ld.ziel, ""), voll and colors.lime or colors.orange, colors.gray)
+      yy = yy + 1
+      local kein = (d.hohlraum == false)
+      local lst, sf
+      if ld.signal then lst, sf = "Signal AN - Laser feuert ...", colors.orange
+      elseif d.gezuendet then lst, sf = "Signal aus (gez\252ndet)", colors.lime
+      elseif ld.fehler then lst, sf = tostring(ld.fehler), colors.red
+      elseif kein then lst, sf = "Kein Hohlraum im Reaktor!", colors.red
+      elseif voll then lst, sf = "Bereit zum Z\252nden", colors.lime
+      else lst, sf = "L\228dt ...", colors.lightGray end
+      schreib(t, rx + 2, yy, lst, sf, colors.gray, bw)
+      yy = yy + 1
+      if d.hohlraum ~= nil and not d.gezuendet then
+        schreib(t, rx + 2, yy, "Hohlraum: " .. (d.hohlraum and "eingelegt" or "FEHLT"),
+          d.hohlraum and colors.lightGray or colors.red, colors.gray, bw)
+      end
+      yy = yy + 1
+      -- Auto-Zuendung
+      local aan = ld.auto == true
+      fuell(t, rx + 2, yy, bw, 1, colors.black)
+      schreib(t, rx + 3, yy, "Auto-Z\252ndung", colors.white, colors.black, bw - 7)
+      local ap = aan and "  AN  " or " AUS  "
+      schreib(t, rx + 2 + bw - #ap, yy, ap, colors.black, aan and colors.lime or colors.lightGray)
+      local lkey = l.key
+      knoepfe[#knoepfe + 1] = { name = t.name, x1 = rx + 2, y1 = yy, x2 = rx + 1 + bw, y2 = yy,
+        aktion = function() steuerBefehl(laser, lkey, "auto", aan and "0" or "1") end }
+      yy = yy + 2
+      if laserFrage and (os.clock() > laserFrage.bis or laserFrage.key ~= l.key) then laserFrage = nil end
+      if not d.gezuendet and not ld.signal and yy < y + hH then
+        if laserFrage then
+          local hb = math.floor((bw - 1) / 2)
+          knopf(t, rx + 2, yy, hb, 1, "JA, Z\220NDEN", colors.green, colors.white, function()
+            laserFrage = nil
+            steuerBefehl(laser, l.key, "zuenden", "")
+          end)
+          knopf(t, rx + 3 + hb, yy, bw - hb - 1, 1, "NEIN", colors.black, colors.white, function() laserFrage = nil end)
+        else
+          local bereit = voll and not kein
+          knopf(t, rx + 2, yy, bw, 1, bereit and "Z\220NDEN" or (kein and "Z\220NDEN (Hohlraum fehlt)" or "Z\220NDEN (wartet auf Ladung)"),
+            bereit and colors.green or colors.black, bereit and colors.white or colors.lightGray, function()
+              if bereit then laserFrage = { key = l.key, bis = os.clock() + 8 } end
+            end)
+        end
+        yy = yy + 2
+      elseif ld.signal and yy < y + hH then
+        knopf(t, rx + 2, yy, bw, 1, "ABBRECHEN (Signal aus)", colors.black, colors.white, function()
+          steuerBefehl(laser, l.key, "abbrechen", "")
+        end)
+        yy = yy + 2
+      end
     end
   end
   if rueckmeldung and os.clock() > rueckmeldung.bis then rueckmeldung = nil end
@@ -2207,6 +2287,10 @@ local function empfangen(id, roh, prot)
           end
         end
       end
+    elseif q == "laser" and type(msg.daten) == "table" then
+      local key = tostring(msg.schluessel or id)
+      laser[key] = { name = tostring(msg.name or ("Laser PC" .. id)), daten = msg.daten, zeit = os.clock(), id = id }
+      if ausstehend["s:" .. key] then local f = ausstehend["s:" .. key] ausstehend["s:" .. key] = nil f() end
     elseif q == "mobfarm" and type(msg.daten) == "table" then
       local key = tostring(msg.schluessel or id)
       local alt = mobfarmen[key]

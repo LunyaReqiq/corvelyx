@@ -10,7 +10,7 @@
 --  "lader" eintippen - oder direkt im Spiel:
 --  wget run https://raw.githubusercontent.com/LunyaReqiq/corvelyx/main/programme/lader.lua
 -- =====================================================
-local LADER_VERSION = "5"
+local LADER_VERSION = "6"
 local CFG_DATEI  = "corvelyx.cfg"
 local LADER_URL  = "https://raw.githubusercontent.com/LunyaReqiq/corvelyx/main/programme/lader.lua"
 local ORDNER     = "corvelyx"
@@ -31,6 +31,7 @@ local PROGRAMME = {
   { UPDATE_SERVER,          "CORVELYX // UPDATE-SERVER",  "Update-Computer (GitHub)" },
   { "tuer_sender.lua",      "CORVELYX // TUER-SENDER",    "Betretungslog (Player Detector)" },
   { "mobfarm.lua",          "CORVELYX // MOBFARM",        "Mobfarm-Schalter (Redstone)" },
+  { "laser_zuender.lua",    "CORVELYX // LASER-ZUENDER",  "Laser-Z\252nder (Fusion)" },
 }
 -- ---------- SHA-256 (fuer gesicherte Fernbefehle) ----------
 local sha256
@@ -306,6 +307,9 @@ local function einrichten()
       local n = fragen("Name (z.B. Matrix 1, leer = automatisch)")
       cfg.NAME = (n and n ~= "") and n or nil
     end
+  end
+  if programm == "laser_zuender.lua" and not altCfg then
+    cfg.NAME = fragen("Name (Laser 1 geh\246rt zu Fusion 1)", "Laser 1")
   end
   if programm == "mobfarm.lua" and not altCfg then
     cfg.NAME = fragen("Name (wie im Control Center)", "Mobfarmen")

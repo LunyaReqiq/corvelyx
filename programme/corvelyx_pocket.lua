@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // POCKET  v1.7
+--  CORVELYX // POCKET  v1.8
 --  Das Control Center fuer die Hosentasche.
 --  Laeuft auf einem ADVANCED POCKET COMPUTER mit
 --  ENDER MODEM (beides in der Werkbank kombinieren).
@@ -157,7 +157,8 @@ local turbinen, flux, lager, xtreme, fusion, matrizen = {}, {}, {}, {}, {}, {}
 local matrixSeite = 0   -- 0 = Gesamt, sonst Nummer der Matrix
 local SEITEN = { "UEBERSICHT", "FISSION", "MATRIX", "TURBINEN", "ME-SYSTEM", "WETTER", "FLUX", "LAGER", "XTREME", "FUSION",
   "MOBFARM", "BESUCHER", "UPDATES" }
-local tueren, mobfarmen = {}, {}
+local tueren, mobfarmen, laser = {}, {}, {}
+local laserFrage = nil
 local mobAuswahl = 1
 local tuerLeeren = nil
 local seite = 1
@@ -505,7 +506,7 @@ local function aufraeumen()
   for q, e in pairs(quellen) do
     if e.zeit and jetzt - e.zeit > CFG.VERGESSEN then quellen[q] = {} end
   end
-  for _, t in ipairs({ turbinen, flux, lager, xtreme, fusion, matrizen, tueren, mobfarmen }) do
+  for _, t in ipairs({ turbinen, flux, lager, xtreme, fusion, matrizen, tueren, mobfarmen, laser }) do
     for key, e in pairs(t) do
       if e.zeit and jetzt - e.zeit > CFG.VERGESSEN then t[key] = nil end
     end
@@ -857,7 +858,7 @@ SEITE[10] = function()   -- Mekanism-Fusion
   local y = Y0 + 1
   if not e.frisch then schreib(2, y, "Keine aktuellen Daten", colors.red) return end
   if d.fehler then schreib(2, y, tostring(d.fehler), colors.red, nil, W - 2) return end
-  zeile(y, d.gezuendet and "GEZUENDET" or "AUS (Laser)", "", d.gezuendet and colors.lime or colors.orange) y = y + 1
+  zeile(y, d.gezuendet and "GEZ\220NDET" or "AUS (Laser)", "", d.gezuendet and colors.lime or colors.orange) y = y + 1
   zeile(y, "Plasma", kurz(d.plasma, " K"), farbe(quote(d.plasma, d.plasmaMax), 0.85, 0.95)) y = y + 1
   zeile(y, "Gehaeuse", kurz(d.gehaeuse, " K"), farbe(quote(d.gehaeuse, d.gehaeuseMax), 0.85, 0.95)) y = y + 1
   zeile(y, "Produktion", kurz(d.prod, " FE/t"), colors.lime) y = y + 1
@@ -879,6 +880,39 @@ SEITE[10] = function()   -- Mekanism-Fusion
   schreib(W - #pill, y, pill, colors.black, an and colors.lime or colors.lightGray)
   bereich(1, y, W, y, function() fusionSenden(e.key, "auto", an and "0" or "1") end)
   y = y + 2
+  -- Nicht gezuendet: Laser-Zuendung statt STOPP
+  if not d.gezuendet then
+    local nr = tostring(e.name):match("(%d+)%s*$")
+    local l, lkey
+    for k, x in pairs(laser) do if nr and x.name:match("(%d+)%s*$") == nr then l, lkey = x, k end end
+    if not l then schreib(2, y, "Kein Laser-Computer", colors.lightGray) return end
+    local ld = l.daten
+    if (os.clock() - l.zeit) >= 15 then schreib(2, y, l.name .. ": keine Verbindung", colors.red, nil, W - 2) return end
+    local voll = (ld.energie or 0) >= (ld.ziel or 1)
+    local kein = d.hohlraum == false
+    local txt, f
+    if ld.signal then txt, f = "Laser feuert ...", colors.orange
+    elseif ld.fehler then txt, f = tostring(ld.fehler), colors.red
+    elseif kein then txt, f = "Hohlraum fehlt!", colors.red
+    elseif voll then txt, f = "Laser bereit", colors.lime
+    else txt, f = string.format("Laser l\228dt %.1f/%.1fG", (ld.energie or 0) / 1e9, (ld.ziel or 0) / 1e9), colors.lightGray end
+    schreib(2, y, txt, f, nil, W - 2)
+    y = y + 1
+    if laserFrage and (os.clock() > laserFrage.bis or laserFrage.key ~= lkey) then laserFrage = nil end
+    if ld.signal then
+      knopf(2, y, W - 2, 1, "ABBRECHEN", colors.gray, colors.white, function() steuerSenden(laser, lkey, "abbrechen") end)
+    elseif laserFrage then
+      local hb = math.floor((W - 3) / 2)
+      knopf(2, y, hb, 1, "JA Z\220NDEN", colors.green, colors.white, function()
+        laserFrage = nil steuerSenden(laser, lkey, "zuenden") end)
+      knopf(3 + hb, y, W - 3 - hb, 1, "NEIN", colors.gray, colors.white, function() laserFrage = nil end)
+    else
+      local ok = voll and not kein
+      knopf(2, y, W - 2, 1, "Z\220NDEN", ok and colors.green or colors.gray, ok and colors.white or colors.lightGray,
+        function() if ok then laserFrage = { key = lkey, bis = os.clock() + 8 } end end)
+    end
+    return
+  end
   if fusionStopp and (os.clock() > fusionStopp.bis or fusionStopp.key ~= e.key) then fusionStopp = nil end
   if y <= H - 2 then
     if fusionStopp then
@@ -1035,9 +1069,9 @@ local function empfangen(id, roh, prot)
     xtreme[key] = { name = tostring(msg.name or ("Xtreme PC" .. id)), daten = msg.daten, zeit = os.clock(),
       id = id, brennWarn = msg.brennWarn }
     if ausstehend["x:" .. key] then local f = ausstehend["x:" .. key] ausstehend["x:" .. key] = nil f() end
-  elseif (msg.quelle == "tuer" or msg.quelle == "mobfarm") and type(msg.daten) == "table" then
+  elseif (msg.quelle == "tuer" or msg.quelle == "mobfarm" or msg.quelle == "laser") and type(msg.daten) == "table" then
     local key = tostring(msg.schluessel or id)
-    local liste = msg.quelle == "tuer" and tueren or mobfarmen
+    local liste = msg.quelle == "tuer" and tueren or (msg.quelle == "laser" and laser or mobfarmen)
     liste[key] = { name = tostring(msg.name or ("PC" .. id)), daten = msg.daten, zeit = os.clock(), id = id }
     if ausstehend["s:" .. key] then local f = ausstehend["s:" .. key] ausstehend["s:" .. key] = nil f() end
   elseif msg.quelle == "lager" and type(msg.faecher) == "table" then
