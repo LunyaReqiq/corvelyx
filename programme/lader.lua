@@ -10,7 +10,7 @@
 --  "lader" eintippen - oder direkt im Spiel:
 --  wget run https://raw.githubusercontent.com/LunyaReqiq/corvelyx/main/programme/lader.lua
 -- =====================================================
-local LADER_VERSION = "6"
+local LADER_VERSION = "7"
 local CFG_DATEI  = "corvelyx.cfg"
 local LADER_URL  = "https://raw.githubusercontent.com/LunyaReqiq/corvelyx/main/programme/lader.lua"
 local ORDNER     = "corvelyx"
@@ -307,6 +307,15 @@ local function einrichten()
       local n = fragen("Name (z.B. Matrix 1, leer = automatisch)")
       cfg.NAME = (n and n ~= "") and n or nil
     end
+  end
+  if programm == "corvelyx_cc.lua" then
+    local t = fragen("Chat-Alarme an (Spieler mit Komma, leer = keine)")
+    local team = {}
+    for roh in tostring(t or ""):gmatch("[^,]+") do
+      local n = roh:gsub("^%s+", ""):gsub("%s+$", "")
+      if n ~= "" then team[#team + 1] = n end
+    end
+    if #team > 0 then cfg.CHAT_TEAM = team end
   end
   if programm == "laser_zuender.lua" and not altCfg then
     cfg.NAME = fragen("Name (Laser 1 geh\246rt zu Fusion 1)", "Laser 1")

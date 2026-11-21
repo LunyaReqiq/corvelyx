@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // CONTROL CENTER  v3.6
+--  CORVELYX // CONTROL CENTER  v3.7
 --
 --  Aufbau:
 --   - Advanced Computer mit Ender Modem
@@ -34,6 +34,20 @@ local CFG = {
   LAGER_ZEIT    = 15,     -- Lager-Sender meldet nur alle 5 s
 
   VERLAUF_TAKT  = 5,      -- Sekunden pro Punkt im Energie-Graph
+
+  -- Alarme im Spiel-Chat (Chat Box von Advanced Peripherals am Computer)
+  CHAT_TEAM     = {},     -- nur diese Spieler bekommen die Alarme, z.B. { "Name1", "Name2" }
+  CHAT_AB_STUFE = 1,      -- 1 = alle Alarme, 2 = nur kritische
+  CHAT_BEHOBEN  = true,   -- auch "Behoben"-Meldungen schicken
+  CHAT_PAUSE    = 300,    -- Sekunden: derselbe Alarm wird so lange nicht erneut gemeldet
+  CHAT_WARTEN   = 20,     -- Sekunden, die ein Alarm anstehen muss, bevor er in den Chat geht
+  CHAT_NAME     = "Corvelyx",
+
+  -- TPS-Warnung an ALLE Spieler (braucht ebenfalls die Chat Box)
+  TPS_WARNUNG   = true,
+  TPS_WARN      = 15,     -- unter diesem Wert gilt der Server als langsam
+  TPS_DAUER     = 30,     -- Sekunden, die es so bleiben muss, bevor gemeldet wird
+  TPS_PAUSE     = 600,    -- Sekunden bis zur naechsten Warnung
   LOGDATEI      = "corvelyx.log",
 }
 -- Einstellungen aus corvelyx.cfg (Update-System) uebernehmen
@@ -551,6 +565,99 @@ local function sichtbareSeiten()
 end
 
 -- ---------- Alarme ----------
+-- ---------- Alarme im Spiel-Chat ----------
+local chatWarteschlange = {}
+local chatOffen = {}       -- [alarm-id] = { seit, stufe, gesendet }
+local chatZuletzt = {}     -- [alarm-id] = os.clock() der letzten Meldung
+local chatGemeldet = {}    -- [alarm-id] = true, wenn gemeldet (fuer "Behoben")
+local function chatTeam() return type(CFG.CHAT_TEAM) == "table" and CFG.CHAT_TEAM or {} end
+local function chatAlarm(id, text, stufe)
+  if #chatTeam() == 0 or stufe < CFG.CHAT_AB_STUFE then return end
+  if chatZuletzt[id] and os.clock() - chatZuletzt[id] < CFG.CHAT_PAUSE then return end
+  chatZuletzt[id] = os.clock()
+  chatGemeldet[id] = true
+  chatWarteschlange[#chatWarteschlange + 1] = { text = (stufe == 2 and "KRITISCH: " or "Alarm: ") .. text,
+    farbe = stufe == 2 and "red" or "gold" }
+end
+local function chatBehoben(id, text)
+  if not chatGemeldet[id] then return end
+  chatGemeldet[id] = nil
+  if CFG.CHAT_BEHOBEN and #chatTeam() > 0 then
+    chatWarteschlange[#chatWarteschlange + 1] = { text = "Behoben: " .. text, farbe = "green" }
+  end
+end
+-- ---------- TPS messen ----------
+-- os.clock() zaehlt Server-Ticks (20 pro Sekunde), os.epoch die echte Zeit.
+-- Laeuft der Server langsamer, zaehlt os.clock langsamer -> TPS.
+local tps = { wert = nil, c = nil, r = nil, schlechtSeit = nil, gutSeit = nil, gemeldet = false, letzte = nil }
+local function tpsMessen()
+  local c, r = os.clock(), os.epoch("utc")
+  if tps.c and r - tps.r < 10000 then return end
+  if tps.c then
+    local d = (r - tps.r) / 1000
+    if d > 0 then tps.wert = math.min(20, 20 * (c - tps.c) / d) end
+  end
+  tps.c, tps.r = c, r
+  if not tps.wert or not CFG.TPS_WARNUNG then return end
+  local jetzt = r / 1000
+  if tps.wert < CFG.TPS_WARN then
+    tps.gutSeit = nil
+    tps.schlechtSeit = tps.schlechtSeit or jetzt
+    if not tps.gemeldet and jetzt - tps.schlechtSeit >= CFG.TPS_DAUER
+       and (not tps.letzte or jetzt - tps.letzte >= CFG.TPS_PAUSE) then
+      tps.gemeldet, tps.letzte = true, jetzt
+      log(string.format("Server langsam: %.1f TPS (an alle gemeldet)", tps.wert), colors.orange)
+      chatWarteschlange[#chatWarteschlange + 1] = { alle = true, farbe = "gold",
+        text = string.format("Der Server l\228uft gerade langsam (%.1f TPS) - es kann laggen.", tps.wert) }
+    end
+  else
+    tps.schlechtSeit = nil
+    if tps.gemeldet and tps.wert >= CFG.TPS_WARN + 2 then
+      tps.gutSeit = tps.gutSeit or jetzt
+      if jetzt - tps.gutSeit >= CFG.TPS_DAUER then
+        tps.gemeldet = false
+        log(string.format("Server wieder normal: %.1f TPS", tps.wert), colors.lime)
+        chatWarteschlange[#chatWarteschlange + 1] = { alle = true, farbe = "green",
+          text = string.format("Der Server l\228uft wieder normal (%.1f TPS).", tps.wert) }
+      end
+    end
+  end
+end
+
+-- Laeuft in eigenem Ablauf: Chat-Box-Aufrufe warten auf das Spiel und
+-- wuerden sonst Funknachrichten der Hauptschleife verschlucken.
+local function chatAblauf()
+  while true do
+    local box = peripheral.find("chatBox")
+    if box and #chatWarteschlange > 0 then
+      local n = table.remove(chatWarteschlange, 1)
+      local json = textutils.serializeJSON({ text = n.text, color = n.farbe })
+      if n.alle then
+        -- an ALLE Spieler auf dem Server
+        for versuch = 1, 3 do
+          local ok, erg = pcall(box.sendFormattedMessage, json, CFG.CHAT_NAME, "[]", "&5", -1)
+          if not (ok and erg) then ok, erg = pcall(box.sendMessage, n.text, CFG.CHAT_NAME, "[]", "&5", -1) end
+          if ok and erg then break end
+          sleep(1)
+        end
+      end
+      for _, spieler in ipairs(n.alle and {} or chatTeam()) do
+        for versuch = 1, 3 do
+          local ok, erg = pcall(box.sendFormattedMessageToPlayer, json, tostring(spieler), CFG.CHAT_NAME, "[]", "&5", -1)
+          if not (ok and erg) then
+            ok, erg = pcall(box.sendMessageToPlayer, n.text, tostring(spieler), CFG.CHAT_NAME, "[]", "&5", -1)
+          end
+          if ok and erg then break end
+          sleep(1)   -- Chat Box hat eine kurze Abklingzeit
+        end
+        sleep(0.6)
+      end
+    else
+      sleep(1)
+    end
+  end
+end
+
 local function alarmeBerechnen()
   local liste = {}
   local function add(id, text, stufe) liste[#liste + 1] = { id = id, text = text, stufe = stufe } end
@@ -665,16 +772,29 @@ local function alarmeBerechnen()
     add("me_verb", "ME-System: keine Daten", 1)
   end
 
-  -- Aenderungen ins Log
+  -- Aenderungen ins Log (und in den Spiel-Chat)
   local neu = {}
   for _, a in ipairs(liste) do
     neu[a.id] = a.text
     if not alteAlarme[a.id] then
       log("ALARM: " .. a.text, a.stufe == 2 and colors.red or colors.orange)
+      chatOffen[a.id] = { seit = os.clock(), stufe = a.stufe }
     end
   end
   for id, text in pairs(alteAlarme) do
-    if not neu[id] then log("Behoben: " .. text, colors.lime) end
+    if not neu[id] then
+      log("Behoben: " .. text, colors.lime)
+      chatBehoben(id, text)
+    end
+  end
+  -- In den Chat erst, wenn der Alarm eine Weile ansteht (keine Meldung
+  -- bei kurzen Aussetzern, z.B. waehrend Updates alles neu startet)
+  for id, o in pairs(chatOffen) do
+    if not neu[id] then chatOffen[id] = nil
+    elseif not o.gesendet and os.clock() - o.seit >= CFG.CHAT_WARTEN then
+      o.gesendet = true
+      chatAlarm(id, neu[id], o.stufe)
+    end
   end
   alteAlarme = neu
   table.sort(liste, function(a, b) return a.stufe > b.stufe end)
@@ -2394,6 +2514,7 @@ end
 -- ---------- Hauptschleife ----------
 log("Control Center gestartet", colors.cyan)
 terminalInfo()
+local function hauptschleife()
 local timer = os.startTimer(1)
 while true do
   local ev = { os.pullEvent() }
@@ -2418,6 +2539,7 @@ while true do
       end
     end
     aufraeumen()
+    tpsMessen()
     alarmeBerechnen()
     local ok, err = pcall(zeichnen)
     if not ok then
@@ -2435,3 +2557,10 @@ while true do
     pcall(zeichnen)
   end
 end
+end
+
+if peripheral.find("chatBox") then
+  if #chatTeam() > 0 then log("Chat-Alarme aktiv f\252r " .. #chatTeam() .. " Spieler", colors.cyan)
+  else log("Chat Box gefunden - CHAT_TEAM in corvelyx.cfg eintragen", colors.orange) end
+end
+parallel.waitForAny(hauptschleife, chatAblauf)

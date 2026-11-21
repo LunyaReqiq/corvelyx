@@ -24,6 +24,7 @@ Reaktoren, Energiespeicher, ME-System, Wetter, Mobfarmen und Besucher auf einen 
 | **Flux & Lager** | Flux-Plugs über Energy Detectors, Füllstand der Functional-Storage-Drawer. |
 | **Mobfarmen** | Ersetzt den Hebel am Create Redstone Link: dauerhaftes Signal, schaltbar vom Control Center, Pocket oder vor Ort. |
 | **Besucher** | Betretungslog an der Tür: Spieler außerhalb des Teams werden mit Datum und deutscher Uhrzeit protokolliert. |
+| **Chat-Alarme** | Mit einer Chat Box am Control Center gehen Alarme als Chat-Nachricht nur an die eingetragenen Team-Spieler. Fällt die Server-TPS ab, bekommen alle Spieler eine Warnung. |
 | **Pocket** | Alle Seiten im Kleinformat für unterwegs, inklusive Steuerung. |
 
 <table>
@@ -46,7 +47,7 @@ Reaktoren, Energiespeicher, ME-System, Wetter, Mobfarmen und Besucher auf einen 
 - **CC: Tweaked** (ist in ATM10 enthalten), HTTP muss auf dem Server erlaubt sein (Standard)
 - **Ender Modems** an jedem Computer
 - **Advanced Monitore** für das Control Center, empfohlen: 8×5 Hauptmonitor + 2×5 Menü
-- **Advanced Peripherals** für ME Bridge und Player Detector
+- **Advanced Peripherals** für ME Bridge, Player Detector und Chat Box
 - Je nach Anlage: Mekanism Logic Adapter, Induction Port, Turbine Valve, Computer Port (Extreme Reactors), Energy Detectors, Functional Storage Controller
 
 Jeder Computer braucht eine **eigene ID**. Nimm frisch gecraftete Computer und kopiere sie nicht im Kreativmodus, sonst teilen sie sich ihre Festplatte.
