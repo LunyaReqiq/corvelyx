@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // POCKET  v1.6
+--  CORVELYX // POCKET  v1.7
 --  Das Control Center fuer die Hosentasche.
 --  Laeuft auf einem ADVANCED POCKET COMPUTER mit
 --  ENDER MODEM (beides in der Werkbank kombinieren).
@@ -29,6 +29,8 @@ CFG.PROT_DATEN   = CFG.NETZ .. "/daten"
 CFG.PROT_WETTER  = CFG.NETZ .. "/wetter"
 CFG.PROT_XTREME  = CFG.NETZ .. "/xtreme"
 CFG.PROT_FUSION  = CFG.NETZ .. "/fusion"
+CFG.PROT_STEUER  = CFG.NETZ .. "/steuer"
+CFG.PROT_UPDATE  = CFG.NETZ .. "/update"
 
 -- ---------- SHA-256 (fuer gesicherte Fernbefehle) ----------
 local sha256
@@ -150,10 +152,14 @@ win.setPaletteColour(colors.green,     0x15803D)
 win.setPaletteColour(colors.brown,     0x7F1D1D)
 
 -- ---------- Zustand ----------
-local quellen = { reaktor = {}, me = {}, wetter = {} }
+local quellen = { reaktor = {}, me = {}, wetter = {}, update = {} }
 local turbinen, flux, lager, xtreme, fusion, matrizen = {}, {}, {}, {}, {}, {}
 local matrixSeite = 0   -- 0 = Gesamt, sonst Nummer der Matrix
-local SEITEN = { "UEBERSICHT", "FISSION", "MATRIX", "TURBINEN", "ME-SYSTEM", "WETTER", "FLUX", "LAGER", "XTREME", "FUSION" }
+local SEITEN = { "UEBERSICHT", "FISSION", "MATRIX", "TURBINEN", "ME-SYSTEM", "WETTER", "FLUX", "LAGER", "XTREME", "FUSION",
+  "MOBFARM", "BESUCHER", "UPDATES" }
+local tueren, mobfarmen = {}, {}
+local mobAuswahl = 1
+local tuerLeeren = nil
 local seite = 1
 local knoepfe = {}
 local alarme = {}
@@ -446,6 +452,23 @@ local function fusionSenden(key, befehl, wert)
   melden("Gesendet ...", colors.lightGray)
 end
 
+-- Steuerbefehle an Tuer / Mobfarm (NETZ/steuer)
+local function steuerSenden(liste, key, befehl)
+  local x = liste[key]
+  if not x or (os.clock() - x.zeit) >= 15 then melden("Keine Verbindung", colors.red) return end
+  local nonce = x.daten.nonce
+  if nonce == false then
+    ausstehend["s:" .. key] = function() steuerSenden(liste, key, befehl) end
+    melden("Wird gesendet ...", colors.lightGray)
+    return
+  end
+  if type(nonce) ~= "string" then melden("Geraet braucht Update", colors.red) return end
+  rednet.send(x.id, { befehl = befehl, wert = "", nonce = nonce,
+    sig = sha256(CFG.PASSWORT .. "|" .. befehl .. "||" .. nonce) }, CFG.PROT_STEUER)
+  x.daten.nonce = false
+  melden("Gesendet ...", colors.lightGray)
+end
+
 -- ---------- Was ist da? / Abgebautes vergessen ----------
 local function vorhanden(i)
   if i == 1 then return true end
@@ -463,6 +486,9 @@ local function vorhanden(i)
   end
   if i == 9 then return next(xtreme) ~= nil end
   if i == 10 then return next(fusion) ~= nil end
+  if i == 11 then return next(mobfarmen) ~= nil end
+  if i == 12 then return next(tueren) ~= nil end
+  if i == 13 then return quellen.update.zeit ~= nil end
   return true
 end
 
@@ -479,7 +505,7 @@ local function aufraeumen()
   for q, e in pairs(quellen) do
     if e.zeit and jetzt - e.zeit > CFG.VERGESSEN then quellen[q] = {} end
   end
-  for _, t in ipairs({ turbinen, flux, lager, xtreme, fusion, matrizen }) do
+  for _, t in ipairs({ turbinen, flux, lager, xtreme, fusion, matrizen, tueren, mobfarmen }) do
     for key, e in pairs(t) do
       if e.zeit and jetzt - e.zeit > CFG.VERGESSEN then t[key] = nil end
     end
@@ -866,6 +892,86 @@ SEITE[10] = function()   -- Mekanism-Fusion
   end
 end
 
+SEITE[11] = function()   -- Mobfarmen
+  local l = {}
+  for key, m in pairs(mobfarmen) do m.key = key l[#l + 1] = m end
+  table.sort(l, function(a, b) return a.name < b.name end)
+  if #l == 0 then schreib(2, Y0, "Keine Daten", colors.lightGray) return end
+  if mobAuswahl > #l then mobAuswahl = 1 end
+  local m = l[mobAuswahl]
+  local d = m.daten
+  local titel = (#l > 1 and "< " or "") .. m.name .. (#l > 1 and (" " .. mobAuswahl .. "/" .. #l .. " >") or "")
+  knopf(1, Y0, W, 1, titel, colors.gray, colors.cyan, function() mobAuswahl = mobAuswahl % #l + 1 end)
+  local y = Y0 + 2
+  local ok = (os.clock() - m.zeit) < 15
+  if not ok then schreib(2, y, "Keine Verbindung", colors.red) return end
+  schreib(2, y, d.an and "AN - Farmen laufen" or "AUS - Farmen gestoppt", d.an and colors.lime or colors.lightGray)
+  y = y + 1
+  if d.seit then schreib(2, y, "Seit " .. tostring(d.seit), colors.lightGray, nil, W - 2) y = y + 1 end
+  if d.wer then schreib(2, y, "(" .. tostring(d.wer) .. ")", colors.lightGray, nil, W - 2) end
+  y = y + 2
+  local key = m.key
+  if d.an then
+    knopf(2, y, W - 2, 3, "AUSSCHALTEN", colors.gray, colors.white, function() steuerSenden(mobfarmen, key, "aus") end)
+  else
+    knopf(2, y, W - 2, 3, "EINSCHALTEN", colors.green, colors.white, function() steuerSenden(mobfarmen, key, "an") end)
+  end
+end
+
+SEITE[12] = function()   -- Betretungslog
+  local alle, heute = {}, 0
+  for _, tu in pairs(tueren) do
+    heute = heute + (tu.daten.heute or 0)
+    for _, e in ipairs(type(tu.daten.eintraege) == "table" and tu.daten.eintraege or {}) do alle[#alle + 1] = e end
+  end
+  table.sort(alle, function(a, b) return (a.zeit or 0) > (b.zeit or 0) end)
+  schreib(2, Y0, "Heute: " .. heute, colors.lightGray)
+  if tuerLeeren and os.clock() > tuerLeeren then tuerLeeren = nil end
+  if tuerLeeren then
+    knopf(W - 11, Y0, 5, 1, "JA", colors.red, colors.white, function()
+      tuerLeeren = nil
+      for key in pairs(tueren) do steuerSenden(tueren, key, "leeren") end
+    end)
+    knopf(W - 5, Y0, 5, 1, "NEIN", colors.gray, colors.white, function() tuerLeeren = nil end)
+    schreib(2, Y0 + 1, "Log wirklich l\246schen?", colors.orange)
+  else
+    knopf(W - 8, Y0, 8, 1, "LEEREN", colors.gray, colors.white, function() tuerLeeren = os.clock() + 8 end)
+  end
+  if #alle == 0 then schreib(2, Y0 + 3, "Noch niemand Fremdes", colors.lime) schreib(2, Y0 + 4, "durch die T\252r.", colors.lime) return end
+  for i, e in ipairs(alle) do
+    local y = Y0 + 1 + i
+    if y > H - 2 then break end
+    local zeit = tostring(e.datum or ""):sub(1, 6) .. " " .. tostring(e.uhr or ""):sub(1, 5)
+    schreib(1, y, zeit, colors.lightGray)
+    schreib(14, y, tostring(e.spieler), i == 1 and colors.orange or colors.white, nil, W - 13)
+  end
+end
+
+SEITE[13] = function()   -- Updates
+  local up = quellen.update
+  local d = up.daten or {}
+  local ok = up.zeit and (os.clock() - up.zeit) < 30
+  local y = Y0
+  if not ok then schreib(2, y, "Update-Computer:", colors.red) schreib(2, y + 1, "keine Verbindung", colors.red)
+  elseif d.fehler then schreib(2, y, "Fehler:", colors.red) schreib(2, y + 1, tostring(d.fehler), colors.red, nil, W - 2)
+  else
+    zeile(y, "Programme", tostring(d.anzahl or "?"), colors.lime)
+    if d.letzte then zeile(y + 1, "Gepr\252ft vor", math.max(0, math.floor((os.epoch("utc") - d.letzte) / 60000)) .. " min") end
+  end
+  y = y + 3
+  if type(d.zuletzt) == "table" and #d.zuletzt > 0 then
+    schreib(2, y, "Zuletzt verteilt:", colors.lightGray) y = y + 1
+    for _, n in ipairs(d.zuletzt) do
+      if y > H - 6 then break end
+      schreib(3, y, n, colors.white, nil, W - 3) y = y + 1
+    end
+  end
+  knopf(2, H - 5, W - 2, 3, "UPDATE", colors.cyan, colors.black, function()
+    rednet.broadcast(signieren({ typ = "pruefen" }), CFG.PROT_UPDATE)
+    melden("Update-Pr\252fung angefordert", colors.cyan)
+  end)
+end
+
 -- ---------- Rahmen ----------
 local function zeichnen()
   knoepfe = {}
@@ -899,7 +1005,7 @@ end
 -- ---------- Empfang ----------
 local function empfangen(id, roh, prot)
   if prot ~= CFG.PROT_REAKTOR and prot ~= CFG.PROT_DATEN and prot ~= CFG.PROT_WETTER
-     and prot ~= CFG.PROT_XTREME and prot ~= CFG.PROT_FUSION then return end
+     and prot ~= CFG.PROT_XTREME and prot ~= CFG.PROT_FUSION and prot ~= CFG.PROT_STEUER then return end
   local msg = auspacken(id, roh)
   if not msg then return end
   if msg.typ == "antwort" then
@@ -929,6 +1035,11 @@ local function empfangen(id, roh, prot)
     xtreme[key] = { name = tostring(msg.name or ("Xtreme PC" .. id)), daten = msg.daten, zeit = os.clock(),
       id = id, brennWarn = msg.brennWarn }
     if ausstehend["x:" .. key] then local f = ausstehend["x:" .. key] ausstehend["x:" .. key] = nil f() end
+  elseif (msg.quelle == "tuer" or msg.quelle == "mobfarm") and type(msg.daten) == "table" then
+    local key = tostring(msg.schluessel or id)
+    local liste = msg.quelle == "tuer" and tueren or mobfarmen
+    liste[key] = { name = tostring(msg.name or ("PC" .. id)), daten = msg.daten, zeit = os.clock(), id = id }
+    if ausstehend["s:" .. key] then local f = ausstehend["s:" .. key] ausstehend["s:" .. key] = nil f() end
   elseif msg.quelle == "lager" and type(msg.faecher) == "table" then
     lager[tostring(msg.schluessel or id)] = { ort = msg.ort or ("PC" .. id), faecher = msg.faecher, zeit = os.clock() }
   elseif msg.quelle == "flux" and type(msg.plugs) == "table" then
