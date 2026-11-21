@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // CONTROL CENTER  v3.8
+--  CORVELYX // CONTROL CENTER  v3.9
 --
 --  Aufbau:
 --   - Advanced Computer mit Ender Modem
@@ -45,7 +45,7 @@ local CFG = {
 
   -- TPS-Warnung an ALLE Spieler (braucht ebenfalls die Chat Box)
   TPS_WARNUNG   = true,
-  TPS_WARN      = 15,     -- unter diesem Wert gilt der Server als langsam
+  TPS_WARN      = 12,     -- unter diesem Wert gilt der Server als langsam
   TPS_DAUER     = 30,     -- Sekunden, die es so bleiben muss, bevor gemeldet wird
   TPS_PAUSE     = 600,    -- Sekunden bis zur naechsten Warnung
   LOGDATEI      = "corvelyx.log",
@@ -634,25 +634,35 @@ local function chatAblauf()
     if box and #chatWarteschlange > 0 then
       local n = table.remove(chatWarteschlange, 1)
       local json = textutils.serializeJSON({ text = n.text, color = n.farbe })
-      if n.alle then
-        -- an ALLE Spieler auf dem Server
+      -- Neue Advanced Peripherals: Optionen als Tabelle, Spieler per "player"
+      -- Alte Version: einzelne Werte, eigene ...ToPlayer-Funktionen
+      local neueApi = (box.sendMessageToPlayer == nil)
+      local function schicke(spieler)
         for versuch = 1, 3 do
-          local ok, erg = pcall(box.sendFormattedMessage, json, CFG.CHAT_NAME, "[]", "&5", -1)
-          if not (ok and erg) then ok, erg = pcall(box.sendMessage, n.text, CFG.CHAT_NAME, "[]", "&5", -1) end
-          if ok and erg then break end
-          sleep(1)
+          local ok, erg
+          if neueApi then
+            local opt = { prefix = CFG.CHAT_NAME, brackets = "[]", bracketColor = "&5", player = spieler }
+            ok, erg = pcall(box.sendFormattedMessage, json, opt)
+            if not (ok and erg) then ok, erg = pcall(box.sendMessage, n.text, opt) end
+          elseif spieler then
+            ok, erg = pcall(box.sendFormattedMessageToPlayer, json, spieler, CFG.CHAT_NAME, "[]", "&5", -1)
+            if not (ok and erg) then ok, erg = pcall(box.sendMessageToPlayer, n.text, spieler, CFG.CHAT_NAME, "[]", "&5", -1) end
+          else
+            ok, erg = pcall(box.sendFormattedMessage, json, CFG.CHAT_NAME, "[]", "&5", -1)
+            if not (ok and erg) then ok, erg = pcall(box.sendMessage, n.text, CFG.CHAT_NAME, "[]", "&5", -1) end
+          end
+          if ok and erg then return true end
+          sleep(1.2)   -- Abklingzeit der Chat Box (1 s)
         end
       end
-      for _, spieler in ipairs(n.alle and {} or chatTeam()) do
-        for versuch = 1, 3 do
-          local ok, erg = pcall(box.sendFormattedMessageToPlayer, json, tostring(spieler), CFG.CHAT_NAME, "[]", "&5", -1)
-          if not (ok and erg) then
-            ok, erg = pcall(box.sendMessageToPlayer, n.text, tostring(spieler), CFG.CHAT_NAME, "[]", "&5", -1)
-          end
-          if ok and erg then break end
-          sleep(1)   -- Chat Box hat eine kurze Abklingzeit
+      if n.alle then
+        schicke(nil)
+        sleep(1.2)
+      else
+        for _, spieler in ipairs(chatTeam()) do
+          schicke(tostring(spieler))
+          sleep(1.2)
         end
-        sleep(0.6)
       end
     else
       sleep(1)
