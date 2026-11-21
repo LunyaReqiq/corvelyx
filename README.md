@@ -29,6 +29,7 @@ GitHub (privat) ──Token──> Update-Computer ──Funknetz, signiert─�
 | `lager_sender.lua` | Functional Storage Controller |
 | `corvelyx_wetter.lua` | Wetter-PC |
 | `tuer_sender.lua` | Betretungslog: Player Detector an der Tür |
+| `mobfarm.lua` | Mobfarm-Schalter: dauerhaftes Redstone-Signal zum Create Redstone Link |
 
 ## Einrichtung eines Computers
 

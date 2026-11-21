@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // TUER-SENDER  v1
+--  CORVELYX // TUER-SENDER  v1.1
 --  Betretungslog: Ein Player Detector an der Tuer erkennt,
 --  wer hindurchgeht. Spieler, die NICHT im Team sind,
 --  werden mit Datum und deutscher Uhrzeit protokolliert
@@ -24,6 +24,7 @@ local CFG = {
 -- Einstellungen aus corvelyx.cfg (Update-System) uebernehmen
 if type(CORVELYX_CFG) == "table" then for k, v in pairs(CORVELYX_CFG) do CFG[k] = v end end
 CFG.PROTOKOLL = CFG.NETZ .. "/daten"
+CFG.PROT_STEUER = CFG.NETZ .. "/steuer"
 -- ---------- SHA-256 (fuer gesicherte Fernbefehle) ----------
 local sha256
 do
@@ -182,6 +183,21 @@ local function spielerJetzt()
   return r
 end
 
+-- ---------- Fernbefehle (signiert, Einmal-Nonce) ----------
+local nonceListe = {}
+local function neueNonce()
+  local n = tostring(os.epoch("utc")) .. "-" .. tostring(math.random(100000, 999999))
+  table.insert(nonceListe, n)
+  if #nonceListe > 3 then table.remove(nonceListe, 1) end
+  return n
+end
+local function nonceEinloesen(n)
+  for i, v in ipairs(nonceListe) do
+    if v == n then table.remove(nonceListe, i) return true end
+  end
+  return false
+end
+
 -- ---------- Funk ----------
 local fehler = nil
 local function heuteZahl()
@@ -195,7 +211,8 @@ local function senden()
   for i = 1, math.min(60, #eintraege) do liste[i] = eintraege[i] end
   rednet.broadcast(signieren({ typ = "status", quelle = "tuer", name = CFG.NAME,
     schluessel = os.getComputerID() .. ":" .. CFG.NAME,
-    daten = { eintraege = liste, heute = heuteZahl(), gesamt = #eintraege, fehler = fehler } }), CFG.PROTOKOLL)
+    daten = { eintraege = liste, heute = heuteZahl(), gesamt = #eintraege, fehler = fehler, nonce = neueNonce() } }),
+    CFG.PROTOKOLL)
 end
 
 -- ---------- Anzeige ----------
@@ -243,6 +260,26 @@ while true do
     end
     if neu then speichern() zeigen() senden() naechstesSenden = jetzt + CFG.SENDEN end
     if jetzt >= naechstesSenden then senden() naechstesSenden = jetzt + CFG.SENDEN end
+  elseif ev[1] == "rednet_message" and ev[4] == CFG.PROT_STEUER then
+    local id, msg = ev[2], ev[3]
+    if type(msg) == "table" and type(msg.befehl) == "string" and type(msg.wert) == "string"
+       and type(msg.nonce) == "string" and type(msg.sig) == "string" then
+      local ok = nonceEinloesen(msg.nonce)
+        and msg.sig == sha256(CFG.PASSWORT .. "|" .. msg.befehl .. "|" .. msg.wert .. "|" .. msg.nonce)
+      local text
+      if not ok then
+        text = "Zugriff verweigert"
+      elseif msg.befehl == "leeren" then
+        eintraege = {}
+        speichern()
+        text = "Log geleert"
+      else
+        ok, text = false, "Unbekannter Befehl"
+      end
+      rednet.send(id, signieren({ typ = "antwort", ok = ok, text = CFG.NAME .. ": " .. text }), CFG.PROT_STEUER)
+      zeigen()
+      senden()
+    end
   elseif ev[1] == "term_resize" then
     zeigen()
   end

@@ -9,7 +9,7 @@
 --  Ersteinrichtung: Datei auf den Computer ziehen und
 --  "lader" eintippen.
 -- =====================================================
-local LADER_VERSION = "3"
+local LADER_VERSION = "4"
 local CFG_DATEI  = "corvelyx.cfg"
 local ORDNER     = "corvelyx"
 local UPDATE_SERVER = "update_server.lua"
@@ -28,6 +28,7 @@ local PROGRAMME = {
   { "corvelyx_wetter.lua",  "CORVELYX // WETTER",         "Wetter-PC" },
   { UPDATE_SERVER,          "CORVELYX // UPDATE-SERVER",  "Update-Computer (GitHub)" },
   { "tuer_sender.lua",      "CORVELYX // TUER-SENDER",    "Betretungslog (Player Detector)" },
+  { "mobfarm.lua",          "CORVELYX // MOBFARM",        "Mobfarm-Schalter (Redstone)" },
 }
 -- ---------- SHA-256 (fuer gesicherte Fernbefehle) ----------
 local sha256
@@ -303,8 +304,16 @@ local function einrichten()
       cfg.NAME = (n and n ~= "") and n or nil
     end
   end
+  if programm == "mobfarm.lua" and not altCfg then
+    cfg.NAME = fragen("Name (wie im Control Center)", "Mobfarmen")
+    local s
+    repeat
+      s = fragen("Seite zum Redstone Link (top/bottom/left/right/front/back)", "back")
+    until s == "top" or s == "bottom" or s == "left" or s == "right" or s == "front" or s == "back"
+    cfg.SEITE = s
+  end
   if programm == "tuer_sender.lua" and not altCfg then
-    cfg.NAME = fragen("Name der Tuer", "Haustuer")
+    cfg.NAME = fragen("Name der T\252r", "Haust\252r")
     local t = fragen("Team-Spieler (werden NICHT geloggt), mit Komma getrennt")
     cfg.TEAM = {}
     for n in tostring(t or ""):gmatch("[^,]+") do
@@ -366,6 +375,7 @@ term.clear() term.setCursorPos(1, 1)
 meldung("CORVELYX // LADER v" .. LADER_VERSION, colors.cyan)
 print("Programm: " .. PROG)
 local hatModem = modemOeffnen()
+if not hatModem then meldung("Kein Ender Modem gefunden! Bitte ein Ender Modem an den Computer.", colors.red) end
 
 local function hashVon(p) local s = lesen(p) return s and sha256(s) or nil end
 local meinHash = hashVon(pfad)
