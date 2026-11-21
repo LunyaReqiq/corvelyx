@@ -1,6 +1,78 @@
 # Corvelyx
 
-ComputerCraft-System für ATM10 (CC: Tweaked): Control Center, Reaktoren, Matrizen, Turbinen, ME, Wetter, Flux, Lager.
+**Ein Leitstand für deine ATM10-Basis, gebaut mit ComputerCraft.**
+Reaktoren, Energiespeicher, ME-System, Wetter, Mobfarmen und Besucher auf einen Blick, gesteuert per Touch-Monitor oder Pocket Computer. Updates kommen automatisch aus diesem Repo.
+
+*In Zusammenarbeit mit den beiden wundervollsten Menschen: Annie & Emi ♥*
+
+![Übersicht im Control Center](bilder/uebersicht.png)
+
+---
+
+## Was Corvelyx kann
+
+| Bereich | Funktionen |
+|---|---|
+| **Control Center** | Touch-Bedienung auf großen Monitoren mit Menü-Monitor daneben. Startseite mit Kacheln für alle Anlagen und aktiven Alarmen. Seiten erscheinen nur für Systeme, die wirklich angeschlossen sind. |
+| **Fission** | Reaktor-Wächter mit automatischer Notabschaltung (SCRAM) bei Hitze, Schaden, Kühlmangel oder vollem Abfall. Start, Stop und Not-Aus aus der Ferne. |
+| **Fusion** | Mehrere Mekanism-Fusionsreaktoren mit Plasma, Gehäuse, D-T-Brennstoff und Injection Rate. Automatik regelt die Leistung nach dem Füllstand der Matrizen. |
+| **Extreme Reactors** | Leistung, Brennstoff, Steuerstäbe und Automatik pro Reaktor. |
+| **Matrix** | Beliebig viele Induction Matrizen mit Gesamt-Ansicht (Speicher, Eingang, Ausgang, Netto, Zeit bis voll oder leer) und Verlauf. |
+| **Turbinen** | Produktion und Dampf jeder Turbine. |
+| **ME-System** | Belegung von Items, Fluids und Chemicals. |
+| **Wetter** | Tageszeit, Wetter und Mondphase. Steuerung über Celestial Manipulators, auch für normale Spieler. |
+| **Flux & Lager** | Flux-Plugs über Energy Detectors, Füllstand der Functional-Storage-Drawer. |
+| **Mobfarmen** | Ersetzt den Hebel am Create Redstone Link: dauerhaftes Signal, schaltbar vom Control Center, Pocket oder vor Ort. |
+| **Besucher** | Betretungslog an der Tür: Spieler außerhalb des Teams werden mit Datum und deutscher Uhrzeit protokolliert. |
+| **Pocket** | Alle Seiten im Kleinformat für unterwegs, inklusive Steuerung. |
+
+<table>
+<tr>
+<td><img src="bilder/matrix.png" alt="Matrix-Seite"></td>
+<td><img src="bilder/fusion.png" alt="Fusion-Seite"></td>
+</tr>
+<tr>
+<td><img src="bilder/besucher.png" alt="Betretungslog"></td>
+<td><img src="bilder/mobfarm.png" alt="Mobfarm-Schalter"></td>
+</tr>
+</table>
+
+![Pocket Computer](bilder/pocket.png)
+
+---
+
+## Was du brauchst
+
+- **CC: Tweaked** (ist in ATM10 enthalten), HTTP muss auf dem Server erlaubt sein (Standard)
+- **Ender Modems** an jedem Computer
+- **Advanced Monitore** für das Control Center, empfohlen: 8×5 Hauptmonitor + 2×5 Menü
+- **Advanced Peripherals** für ME Bridge und Player Detector
+- Je nach Anlage: Mekanism Logic Adapter, Induction Port, Turbine Valve, Computer Port (Extreme Reactors), Energy Detectors, Functional Storage Controller
+
+Jeder Computer braucht eine **eigene ID**. Nimm frisch gecraftete Computer und kopiere sie nicht im Kreativmodus, sonst teilen sie sich ihre Festplatte.
+
+---
+
+## Schnellstart
+
+### 1. Update-Computer (einmal pro Netz)
+
+1. Neuen Computer mit Ender Modem aufstellen, am besten in einem geclaimten und gechunkloadeten Chunk.
+2. [`programme/lader.lua`](programme/lader.lua) herunterladen und ins Computerfenster ziehen.
+3. `lader` eintippen und **10** (Update-Computer) wählen.
+4. Einen **eigenen Netznamen und ein eigenes Passwort** ausdenken und eintragen. Benutzer, Repo, Branch und Ordner mit Enter übernehmen, den Token leer lassen.
+
+Auf dem Bildschirm sollte danach „OK – … Programme“ stehen.
+
+### 2. Alle anderen Computer
+
+1. Computer mit Ender Modem an die Anlage stellen.
+2. `lader.lua` ins Fenster ziehen, `lader` eintippen.
+3. Programm auswählen und Netz und Passwort eintragen, genau wie beim Update-Computer.
+
+Läuft auf dem Computer schon ein altes Corvelyx-Programm, erkennt der Lader es und übernimmt die Einstellungen. Die Sicherung landet in `startup_alt.lua`.
+
+---
 
 ## Wie die Updates laufen
 
@@ -9,11 +81,18 @@ GitHub ──> Update-Computer ──Funknetz, signiert──> alle Corvelyx-Com
 ```
 
 - Jeder Computer hat `lader.lua` als `startup.lua`. Beim Start fragt er den Update-Computer nach seinem Programm.
-- Der Update-Computer prüft dieses Repo alle 10 Minuten bzw. sofort, wenn im Control Center unter **LOG → UPDATE** gedrückt wird.
+- Der Update-Computer prüft dieses Repo alle 10 Minuten bzw. sofort, wenn unter **LOG → UPDATE** (oder im Pocket unter **UPDATES**) gedrückt wird.
 - Ändert sich eine Datei, starten **nur die Computer neu, die genau dieses Programm haben**.
-- Netzname, Passwort, Namen und eigene Einstellungen stehen auf jedem Computer in `corvelyx.cfg`, **nie in diesem Repo**.
+- Ist der Update-Computer aus, starten alle mit ihrer gespeicherten Version.
 
-## Ordner `programme`
+## Sicherheit
+
+- Netzname, Passwort, Namen und eigene Einstellungen stehen auf jedem Computer in `corvelyx.cfg` und **nie in diesem Repo**.
+- Alle Nachrichten sind mit dem Passwort signiert (SHA-256), Befehle zusätzlich mit Einmal-Codes. Mehrere Netze auf demselben Server stören sich nicht, und Fremde können nichts steuern.
+
+---
+
+## Programme
 
 | Datei | Computer |
 |---|---|
@@ -27,23 +106,20 @@ GitHub ──> Update-Computer ──Funknetz, signiert──> alle Corvelyx-Com
 | `corvelyx_sender.lua` | Induction Port / Turbine Valve / ME Bridge (Name in der cfg) |
 | `flux_sender.lua` | Flux Plugs (Energy Detectors) |
 | `lager_sender.lua` | Functional Storage Controller |
-| `corvelyx_wetter.lua` | Wetter-PC |
+| `corvelyx_wetter.lua` | Wetter-PC (Celestial Manipulators) |
 | `tuer_sender.lua` | Betretungslog: Player Detector an der Tür |
 | `mobfarm.lua` | Mobfarm-Schalter: dauerhaftes Redstone-Signal zum Create Redstone Link |
 
-## Eigenes Netz einrichten (auch für Freunde)
+## Einstellungen ändern
 
-1. Einen neuen Computer mit Ender Modem als Update-Computer aufstellen.
-2. `lader.lua` in das Computerfenster ziehen, `lader` eintippen, **10** wählen.
-3. Eigenen Netznamen und eigenes Passwort eintragen. Benutzer, Repo, Branch und Ordner mit Enter übernehmen, Token leer lassen.
-4. Danach jeden weiteren Computer wie unten einrichten.
+Am jeweiligen Computer: **Strg+T**, `edit corvelyx.cfg`, ändern, speichern, `reboot`.
+Programme selbst nicht bearbeiten, sie werden beim nächsten Update ersetzt.
 
-Jedes Netz ist durch sein eigenes Passwort von den anderen getrennt.
+## Häufige Probleme
 
-## Einrichtung eines Computers
-
-1. Laufendes Programm mit **Strg+T** beenden.
-2. `lader.lua` in das Computerfenster ziehen.
-3. `lader` eintippen. Das alte Programm und seine Einstellungen werden erkannt und übernommen (Sicherung: `startup_alt.lua`).
-
-Einstellungen später ändern: `edit corvelyx.cfg`
+| Problem | Lösung |
+|---|---|
+| „Kein Ender Modem gefunden“ | Ender Modem direkt an den Computer, nicht auf dieselbe Seite wie ein anderes Gerät. |
+| Zwei Computer tauschen ihre Rolle | Sie haben dieselbe ID. Einen davon durch einen frisch gecrafteten Computer ersetzen. |
+| „Update-Computer nicht erreichbar“ | Läuft er? Gleicher Netzname und gleiches Passwort (Groß-/Kleinschreibung)? |
+| Update-Computer meldet GitHub-Fehler | HTTP in `serverconfig/computercraft-server.toml` erlaubt? Benutzer- und Repo-Name richtig? |
