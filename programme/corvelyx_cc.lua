@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // CONTROL CENTER  v3.7
+--  CORVELYX // CONTROL CENTER  v3.8
 --
 --  Aufbau:
 --   - Advanced Computer mit Ender Modem
@@ -570,6 +570,8 @@ local chatWarteschlange = {}
 local chatOffen = {}       -- [alarm-id] = { seit, stufe, gesendet }
 local chatZuletzt = {}     -- [alarm-id] = os.clock() der letzten Meldung
 local chatGemeldet = {}    -- [alarm-id] = true, wenn gemeldet (fuer "Behoben")
+-- Advanced Peripherals nennt die Chat Box je nach Version "chatBox" oder "chat_box"
+local function chatBoxFinden() return peripheral.find("chatBox") or peripheral.find("chat_box") end
 local function chatTeam() return type(CFG.CHAT_TEAM) == "table" and CFG.CHAT_TEAM or {} end
 local function chatAlarm(id, text, stufe)
   if #chatTeam() == 0 or stufe < CFG.CHAT_AB_STUFE then return end
@@ -628,7 +630,7 @@ end
 -- wuerden sonst Funknachrichten der Hauptschleife verschlucken.
 local function chatAblauf()
   while true do
-    local box = peripheral.find("chatBox")
+    local box = chatBoxFinden()
     if box and #chatWarteschlange > 0 then
       local n = table.remove(chatWarteschlange, 1)
       local json = textutils.serializeJSON({ text = n.text, color = n.farbe })
@@ -2559,7 +2561,7 @@ while true do
 end
 end
 
-if peripheral.find("chatBox") then
+if chatBoxFinden() then
   if #chatTeam() > 0 then log("Chat-Alarme aktiv f\252r " .. #chatTeam() .. " Spieler", colors.cyan)
   else log("Chat Box gefunden - CHAT_TEAM in corvelyx.cfg eintragen", colors.orange) end
 end
