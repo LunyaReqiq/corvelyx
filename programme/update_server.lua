@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // UPDATE-SERVER  v1.1
+--  CORVELYX // UPDATE-SERVER  v1.2
 --  Holt die Programme aus deinem privaten GitHub-Repo und
 --  verteilt sie ueber das Funknetz an alle Corvelyx-
 --  Computer. Nur DIESER Computer kennt den GitHub-Token.
@@ -228,17 +228,30 @@ local function pruefen()
     rednet.broadcast(signieren({ typ = "neustart", dateien = geaendert }), CFG.PROT_UPDATE)
     log("Neustart-Signal: " .. table.concat(namen, ", "), colors.yellow)
     -- Eigenes Update: Update-Server bzw. Lader auf diesem Computer ersetzen
-    local selbst = geaendert["update_server.lua"] or geaendert["lader.lua"]
-    if selbst then
-      if geaendert["update_server.lua"] then
-        schreiben("corvelyx/update_server.lua", lesen(SPEICHER .. "/update_server.lua"))
+  end
+  -- Eigene Dateien abgleichen (z.B. frisch eingerichteter Update-Computer)
+  local eigen = {
+    { "lader.lua", "startup.lua" },
+    { "update_server.lua", "corvelyx/update_server.lua" },
+  }
+  local neustart = false
+  for _, e in ipairs(eigen) do
+    local ix = index[e[1]]
+    local soll = ix and lesen(SPEICHER .. "/" .. e[1])
+    if soll then
+      local ist = lesen(e[2])
+      if not ist or sha256(ist) ~= ix.hash then
+        schreiben(e[2], soll)
+        log("Eigenes Update: " .. e[1], colors.lime)
+        neustart = true
       end
-      if geaendert["lader.lua"] then schreiben("startup.lua", lesen(SPEICHER .. "/lader.lua")) end
-      sleep(2)
-      os.reboot()
     end
   end
   pruefLaeuft = false
+  if neustart then
+    sleep(2)
+    os.reboot()
+  end
 end
 
 -- ---------- Anzeige ----------
@@ -310,31 +323,41 @@ pruefen()
 zeigen()
 statusSenden()
 standSenden()
-local pruefTimer = os.startTimer(CFG.PRUEF_INTERVALL)
-local statusTimer = os.startTimer(CFG.STATUS_INTERVALL)
-local standTimer = os.startTimer(CFG.STAND_INTERVALL)
-local letztePruefung = os.clock()
+-- Ein Takt-Timer pro Sekunde, Faelligkeiten ueber die Uhr.
+-- (Waehrend einer GitHub-Abfrage verschluckt CC andere Ereignisse,
+--  auch Timer. Deshalb wird der Takt nach jeder Abfrage neu gestellt.)
+local naechstePruefung = os.clock() + CFG.PRUEF_INTERVALL
+local naechsterStatus  = os.clock() + CFG.STATUS_INTERVALL
+local naechsterStand   = os.clock() + CFG.STAND_INTERVALL
+local letztePruefung   = os.clock()
+local takt = os.startTimer(1)
+local function jetztPruefen()
+  pruefen()
+  letztePruefung = os.clock()
+  naechstePruefung = os.clock() + CFG.PRUEF_INTERVALL
+  statusSenden()
+  standSenden()
+  takt = os.startTimer(1)
+end
 while true do
   local ev = { os.pullEvent() }
-  if ev[1] == "timer" and ev[2] == pruefTimer then
-    pruefen() letztePruefung = os.clock()
-    pruefTimer = os.startTimer(CFG.PRUEF_INTERVALL)
-  elseif ev[1] == "timer" and ev[2] == standTimer then
-    standSenden()
-    standTimer = os.startTimer(CFG.STAND_INTERVALL)
-  elseif ev[1] == "timer" and ev[2] == statusTimer then
-    statusSenden()
-    statusTimer = os.startTimer(CFG.STATUS_INTERVALL)
+  if ev[1] == "timer" and ev[2] == takt then
+    takt = os.startTimer(1)
   elseif ev[1] == "rednet_message" and ev[4] == CFG.PROT_UPDATE then
     local a = auspacken(ev[2], ev[3])
-    if a and anfrage(ev[2], a) and os.clock() - letztePruefung > 20 then
-      pruefen() letztePruefung = os.clock()
-      statusSenden()
-      standSenden()
-    end
+    if a and anfrage(ev[2], a) and os.clock() - letztePruefung > 20 then jetztPruefen() end
   elseif ev[1] == "key" and ev[2] == keys.u then
-    pruefen() letztePruefung = os.clock()
+    jetztPruefen()
+  end
+  local jetzt = os.clock()
+  if jetzt >= naechstePruefung then jetztPruefen() jetzt = os.clock() end
+  if jetzt >= naechsterStatus then
+    statusSenden()
+    naechsterStatus = jetzt + CFG.STATUS_INTERVALL
+  end
+  if jetzt >= naechsterStand then
     standSenden()
+    naechsterStand = jetzt + CFG.STAND_INTERVALL
   end
   zeigen()
 end
