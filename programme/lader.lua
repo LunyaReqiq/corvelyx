@@ -9,7 +9,7 @@
 --  Ersteinrichtung: Datei auf den Computer ziehen und
 --  "lader" eintippen.
 -- =====================================================
-local LADER_VERSION = "2"
+local LADER_VERSION = "3"
 local CFG_DATEI  = "corvelyx.cfg"
 local ORDNER     = "corvelyx"
 local UPDATE_SERVER = "update_server.lua"
@@ -27,6 +27,7 @@ local PROGRAMME = {
   { "lager_sender.lua",     "CORVELYX // LAGER-SENDER",   "Lager-Sender" },
   { "corvelyx_wetter.lua",  "CORVELYX // WETTER",         "Wetter-PC" },
   { UPDATE_SERVER,          "CORVELYX // UPDATE-SERVER",  "Update-Computer (GitHub)" },
+  { "tuer_sender.lua",      "CORVELYX // TUER-SENDER",    "Betretungslog (Player Detector)" },
 }
 -- ---------- SHA-256 (fuer gesicherte Fernbefehle) ----------
 local sha256
@@ -300,6 +301,15 @@ local function einrichten()
     if programm == "corvelyx_sender.lua" or programm == "fusion_reaktor.lua" or programm == "xtreme_reaktor.lua" then
       local n = fragen("Name (z.B. Matrix 1, leer = automatisch)")
       cfg.NAME = (n and n ~= "") and n or nil
+    end
+  end
+  if programm == "tuer_sender.lua" and not altCfg then
+    cfg.NAME = fragen("Name der Tuer", "Haustuer")
+    local t = fragen("Team-Spieler (werden NICHT geloggt), mit Komma getrennt")
+    cfg.TEAM = {}
+    for n in tostring(t or ""):gmatch("[^,]+") do
+      n = n:gsub("^%s+", ""):gsub("%s+$", "")
+      if n ~= "" then cfg.TEAM[#cfg.TEAM + 1] = n end
     end
   end
   if programm == UPDATE_SERVER then

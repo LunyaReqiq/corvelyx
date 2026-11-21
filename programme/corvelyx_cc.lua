@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // CONTROL CENTER  v3.1
+--  CORVELYX // CONTROL CENTER  v3.2
 --
 --  Aufbau:
 --   - Advanced Computer mit Ender Modem
@@ -191,6 +191,8 @@ local turbinen = {}   -- beliebig viele, Schluessel = Sender-PC + Valve
 local fluxSender = {} -- [schluessel] = { ort, plugs, zeit }
 local fluxSeite, fluxSort = 1, "leistung"
 local lagerSender = {} -- [schluessel] = { ort, faecher, slots, zeit }
+local tueren = {}      -- [schluessel] = { name, daten, zeit, id } (Betretungslog)
+local tuerGesehen = {} -- bereits gemeldete Eintraege
 local lagerSeite, lagerSort = 1, "fuell"
 local xtreme = {}     -- Extreme Reactors: [schluessel] = { name, daten, zeit, id }
 local xtremeAuswahl = 1
@@ -222,6 +224,7 @@ local SEITEN = {
   { id = "wetter",     name = "WETTER" },
   { id = "flux",       name = "FLUX" },
   { id = "lager",      name = "LAGER" },
+  { id = "besucher",   name = "BESUCHER", kurz = "TUER" },
   { id = "log",        name = "LOG" },
 }
 
@@ -505,6 +508,7 @@ local function aufraeumen()
   tabelle(matrizen, "Matrix")
   tabelle(fluxSender, "Flux-Sender")
   tabelle(lagerSender, "Lager")
+  tabelle(tueren, "Tuer")
   tabelle(xtreme, "Xtreme")
   tabelle(fusion, "Fusion")
 end
@@ -525,6 +529,7 @@ local function vorhanden(id)
     end
     return false
   end
+  if id == "besucher" then return next(tueren) ~= nil end
   if id == "xtreme" then return next(xtreme) ~= nil end
   if id == "fusion" then return next(fusion) ~= nil end
   return true
@@ -1858,6 +1863,48 @@ function ZEICHNE.log(t, x0, y0, W, H)
   end
 end
 
+-- ---------- Betretungslog ----------
+function ZEICHNE.besucher(t, x0, y0, W, H)
+  local alle, heute, gesamt, mehrere, fehler = {}, 0, 0, 0, nil
+  for _, tu in pairs(tueren) do
+    mehrere = mehrere + 1
+    local d = tu.daten
+    heute = heute + (d.heute or 0)
+    gesamt = gesamt + (d.gesamt or 0)
+    if d.fehler then fehler = tu.name .. ": " .. tostring(d.fehler) end
+    for _, e in ipairs(type(d.eintraege) == "table" and d.eintraege or {}) do
+      alle[#alle + 1] = { e = e, tuer = tu.name }
+    end
+  end
+  table.sort(alle, function(a, b) return (a.e.zeit or 0) > (b.e.zeit or 0) end)
+  panel(t, x0, y0, W, H, "BETRETUNGSLOG", colors.cyan)
+  schreib(t, x0 + 2, y0 + 1, "Heute: " .. heute .. "   Gesamt: " .. gesamt .. "   (nur Spieler ausserhalb des Teams)",
+    colors.lightGray, colors.gray, W - 3)
+  if fehler then schreib(t, x0 + 2, y0 + 2, fehler, colors.red, colors.gray, W - 3) end
+  local sp = { x0 + 2, x0 + 14, x0 + 25 }
+  local spTuer = x0 + math.max(45, math.floor(W * 0.6))
+  local y = y0 + 3
+  schreib(t, sp[1], y, "DATUM", colors.cyan, colors.gray)
+  schreib(t, sp[2], y, "UHRZEIT", colors.cyan, colors.gray)
+  schreib(t, sp[3], y, "SPIELER", colors.cyan, colors.gray)
+  if mehrere > 1 then schreib(t, spTuer, y, "TUER", colors.cyan, colors.gray) end
+  if #alle == 0 then
+    schreib(t, sp[1], y + 2, "Noch niemand Fremdes ist durch die Tuer gegangen.", colors.lime, colors.gray, W - 3)
+    return
+  end
+  local heuteDatum = alle[1].e.datum
+  for i, a in ipairs(alle) do
+    local ry = y + i
+    if ry > y0 + H - 2 then break end
+    local e = a.e
+    local f = (i == 1) and colors.orange or colors.white
+    schreib(t, sp[1], ry, tostring(e.datum), colors.lightGray, colors.gray)
+    schreib(t, sp[2], ry, tostring(e.uhr), colors.lightGray, colors.gray)
+    schreib(t, sp[3], ry, tostring(e.spieler), f, colors.gray, (mehrere > 1 and spTuer - sp[3] - 1) or (x0 + W - 2 - sp[3]))
+    if mehrere > 1 then schreib(t, spTuer, ry, a.tuer, colors.lightGray, colors.gray, x0 + W - 2 - spTuer) end
+  end
+end
+
 -- ---------- Rahmen: Kopfzeile, Menue ----------
 local function kopf(t, y)
   fuell(t, 1, y, t.w, 1, colors.gray)
@@ -2071,6 +2118,22 @@ local function empfangen(id, roh, prot)
       xtreme[key] = { name = tostring(msg.name or ("Xtreme PC" .. id)), daten = msg.daten, zeit = os.clock(),
         id = id, brennWarn = msg.brennWarn }
       if ausstehend["x:" .. key] then local f = ausstehend["x:" .. key] ausstehend["x:" .. key] = nil f() end
+    elseif q == "tuer" and type(msg.daten) == "table" then
+      local key = tostring(msg.schluessel or id)
+      local erstes = (tueren[key] == nil)
+      local name = tostring(msg.name or ("Tuer PC" .. id))
+      tueren[key] = { name = name, daten = msg.daten, zeit = os.clock(), id = id }
+      local liste = type(msg.daten.eintraege) == "table" and msg.daten.eintraege or {}
+      for i = #liste, 1, -1 do
+        local e = liste[i]
+        local k = key .. "|" .. tostring(e.zeit) .. "|" .. tostring(e.spieler)
+        if not tuerGesehen[k] then
+          tuerGesehen[k] = true
+          if not erstes then
+            log("Besucher: " .. tostring(e.spieler) .. " (" .. name .. ", " .. tostring(e.datum) .. " " .. tostring(e.uhr) .. ")", colors.orange)
+          end
+        end
+      end
     elseif q == "lager" and type(msg.faecher) == "table" then
       lagerSender[tostring(msg.schluessel or id)] = { ort = msg.ort or ("PC" .. id), faecher = msg.faecher,
         slots = msg.slots, zeit = os.clock() }

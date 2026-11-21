@@ -28,6 +28,7 @@ GitHub (privat) ──Token──> Update-Computer ──Funknetz, signiert─�
 | `flux_sender.lua` | Flux Plugs (Energy Detectors) |
 | `lager_sender.lua` | Functional Storage Controller |
 | `corvelyx_wetter.lua` | Wetter-PC |
+| `tuer_sender.lua` | Betretungslog: Player Detector an der Tür |
 
 ## Einrichtung eines Computers
 
