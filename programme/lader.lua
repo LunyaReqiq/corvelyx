@@ -316,8 +316,8 @@ local function einrichten()
     cfg.NAME = fragen("Name der T\252r", "Haust\252r")
     local t = fragen("Team-Spieler (werden NICHT geloggt), mit Komma getrennt")
     cfg.TEAM = {}
-    for n in tostring(t or ""):gmatch("[^,]+") do
-      n = n:gsub("^%s+", ""):gsub("%s+$", "")
+    for roh in tostring(t or ""):gmatch("[^,]+") do
+      local n = roh:gsub("^%s+", ""):gsub("%s+$", "")
       if n ~= "" then cfg.TEAM[#cfg.TEAM + 1] = n end
     end
   end
