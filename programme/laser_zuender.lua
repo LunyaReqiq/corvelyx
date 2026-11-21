@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // LASER-ZUENDER  v1
+--  CORVELYX // LASER-ZUENDER  v1.1
 --  Zuendet einen Mekanism-Fusionsreaktor: gibt dem Laser
 --  Amplifier ein Redstone-Signal, bis der zugehoerige
 --  Reaktor "gezuendet" meldet, und schaltet es dann ab.
@@ -170,10 +170,16 @@ local function setzeSignal(an, grund)
 end
 rs.setOutput(SEITE, false)   -- nach Neustart immer aus
 
-local function energie()
+-- Werte des Amplifiers: werden von einem eigenen Leser-Ablauf geholt.
+-- (Mekanism-Abfragen warten auf den Spiel-Thread; in der Zeit wuerden
+--  sonst Funknachrichten und Timer verloren gehen.)
+local cache = { e = nil, m = nil }
+local function energie() return cache.e, cache.m end
+local function lesen()
   local ok, e = pcall(amp.getEnergy)
   local ok2, m = pcall(amp.getMaxEnergy)
-  return ok and inFE(e) or nil, ok2 and inFE(m) or nil
+  cache.e = ok and inFE(e) or nil
+  cache.m = ok2 and inFE(m) or nil
 end
 local function ziel()
   local _, m = energie()
@@ -245,8 +251,18 @@ local function zeigen()
 end
 
 -- ---------- Hauptschleife ----------
+lesen()
 zeigen()
 senden()
+
+local function leser()
+  while true do
+    lesen()
+    sleep(1)
+  end
+end
+
+local function haupt()
 local takt = os.startTimer(1)
 local naechstesSenden = os.clock() + CFG.SENDEN
 while true do
@@ -298,3 +314,6 @@ while true do
     zeigen()
   end
 end
+end
+
+parallel.waitForAny(leser, haupt)
