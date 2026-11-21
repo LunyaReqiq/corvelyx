@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // UPDATE-SERVER  v1.2
+--  CORVELYX // UPDATE-SERVER  v1.3
 --  Holt die Programme aus deinem privaten GitHub-Repo und
 --  verteilt sie ueber das Funknetz an alle Corvelyx-
 --  Computer. Nur DIESER Computer kennt den GitHub-Token.
@@ -11,11 +11,11 @@
 local CFG = {
   NETZ             = "Hier-Netzname-Eintragen",
   PASSWORT         = "Hier-Netzpasswort-Eintragen",
-  GITHUB_BENUTZER  = "",
+  GITHUB_BENUTZER  = "LunyaReqiq",
   REPO             = "corvelyx",
   BRANCH           = "main",
   ORDNER           = "programme",
-  TOKEN            = "",
+  TOKEN            = "",          -- nur fuer private Repos noetig
   PRUEF_INTERVALL  = 600,   -- Sekunden zwischen GitHub-Pruefungen
   STATUS_INTERVALL = 3,     -- Sekunden zwischen Statusmeldungen ans CC
   STAND_INTERVALL  = 300,   -- Sekunden: kompletter Stand fuer verpasste Updates
@@ -157,18 +157,20 @@ end
 local function api(pfad, roh)
   local url = "https://api.github.com/repos/" .. CFG.GITHUB_BENUTZER .. "/" .. CFG.REPO .. "/contents/" .. pfad
     .. "?ref=" .. CFG.BRANCH
-  local r, err, fr = http.get(url, {
-    Authorization = "Bearer " .. CFG.TOKEN,
+  local kopf = {
     Accept = roh and "application/vnd.github.raw" or "application/vnd.github+json",
     ["X-GitHub-Api-Version"] = "2022-11-28",
     ["User-Agent"] = "Corvelyx",
-  }, true)
+  }
+  -- Token nur bei privatem Repo noetig (oeffentlich geht es auch ohne)
+  if CFG.TOKEN and CFG.TOKEN ~= "" then kopf.Authorization = "Bearer " .. CFG.TOKEN end
+  local r, err, fr = http.get(url, kopf, true)
   if not r then
     local code = fr and fr.getResponseCode()
     if fr then fr.close() end
     if code == 401 then return nil, "Token ungueltig oder abgelaufen"
-    elseif code == 404 then return nil, "Repo/Ordner nicht gefunden (Name, Token-Rechte?)"
-    elseif code == 403 then return nil, "GitHub verweigert (Limit oder Rechte)"
+    elseif code == 404 then return nil, "Repo/Ordner nicht gefunden (Name? privat ohne Token?)"
+    elseif code == 403 or code == 429 then return nil, "GitHub-Limit erreicht, versuche es spaeter"
     elseif code then return nil, "GitHub antwortet " .. code end
     return nil, "Keine Verbindung: " .. tostring(err)
   end
@@ -181,8 +183,8 @@ local pruefLaeuft = false
 local function pruefen()
   if pruefLaeuft then return end
   pruefLaeuft = true
-  if CFG.GITHUB_BENUTZER == "" or CFG.TOKEN == "" then
-    status.fehler = "GitHub-Zugang fehlt (corvelyx.cfg)"
+  if CFG.GITHUB_BENUTZER == "" then
+    status.fehler = "GitHub-Benutzer fehlt (corvelyx.cfg)"
     pruefLaeuft = false
     return
   end

@@ -244,8 +244,9 @@ local function github(cfg, datei)
   local pfad = (cfg.ORDNER and cfg.ORDNER ~= "") and (cfg.ORDNER .. "/" .. datei) or datei
   local url = "https://api.github.com/repos/" .. cfg.GITHUB_BENUTZER .. "/" .. cfg.REPO
     .. "/contents/" .. pfad .. "?ref=" .. (cfg.BRANCH or "main")
-  local r, err, fr = http.get(url, { Authorization = "Bearer " .. cfg.TOKEN,
-    Accept = "application/vnd.github.raw", ["User-Agent"] = "Corvelyx" }, true)
+  local kopf = { Accept = "application/vnd.github.raw", ["User-Agent"] = "Corvelyx" }
+  if cfg.TOKEN and cfg.TOKEN ~= "" then kopf.Authorization = "Bearer " .. cfg.TOKEN end
+  local r, err, fr = http.get(url, kopf, true)
   if not r then
     local code = fr and fr.getResponseCode() or nil
     if fr then fr.close() end
@@ -324,11 +325,11 @@ local function einrichten()
   if programm == UPDATE_SERVER then
     print("")
     meldung("GitHub-Zugang (nur auf diesem Computer!)", colors.cyan)
-    cfg.GITHUB_BENUTZER = fragen("GitHub-Benutzername")
+    cfg.GITHUB_BENUTZER = fragen("GitHub-Benutzername", "LunyaReqiq")
     cfg.REPO   = fragen("Repo-Name", "corvelyx")
     cfg.BRANCH = fragen("Branch", "main")
     cfg.ORDNER = fragen("Ordner im Repo", "programme")
-    cfg.TOKEN  = fragen("Token", nil, true)
+    cfg.TOKEN  = fragen("Token (leer lassen, wenn das Repo \246ffentlich ist)", nil, true) or ""
   end
   cfg._ABGLEICH = altCfg and true or nil   -- nur geaenderte Werte behalten, sobald neue Version da ist
 
