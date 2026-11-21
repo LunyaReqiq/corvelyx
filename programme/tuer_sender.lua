@@ -12,7 +12,7 @@
 local CFG = {
   NETZ        = "Hier-Netzname-Eintragen",
   PASSWORT    = "Hier-Netzpasswort-Eintragen",
-  NAME        = "Haustuer",   -- Name dieser Tuer
+  NAME        = "Haust\252r",  -- Name dieser Tuer (\252 = ue)
   TEAM        = {},           -- Spieler, die NICHT protokolliert werden, z.B. { "Name1", "Name2" }
   BEREICH     = { 3, 3, 3 },  -- Erkennungsbox um den Detector: Breite, Hoehe, Tiefe (Bloecke)
   REICHWEITE  = 2,            -- Ersatz, falls die Box nicht geht: Radius in Bloecken

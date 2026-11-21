@@ -1,5 +1,5 @@
 -- =====================================================
---  CORVELYX // CONTROL CENTER  v3.2
+--  CORVELYX // CONTROL CENTER  v3.3
 --
 --  Aufbau:
 --   - Advanced Computer mit Ender Modem
@@ -224,7 +224,7 @@ local SEITEN = {
   { id = "wetter",     name = "WETTER" },
   { id = "flux",       name = "FLUX" },
   { id = "lager",      name = "LAGER" },
-  { id = "besucher",   name = "BESUCHER", kurz = "TUER" },
+  { id = "besucher",   name = "BESUCHER", kurz = "T\220R" },
   { id = "log",        name = "LOG" },
 }
 
@@ -508,7 +508,7 @@ local function aufraeumen()
   tabelle(matrizen, "Matrix")
   tabelle(fluxSender, "Flux-Sender")
   tabelle(lagerSender, "Lager")
-  tabelle(tueren, "Tuer")
+  tabelle(tueren, "T\252r")
   tabelle(xtreme, "Xtreme")
   tabelle(fusion, "Fusion")
 end
@@ -1878,7 +1878,7 @@ function ZEICHNE.besucher(t, x0, y0, W, H)
   end
   table.sort(alle, function(a, b) return (a.e.zeit or 0) > (b.e.zeit or 0) end)
   panel(t, x0, y0, W, H, "BETRETUNGSLOG", colors.cyan)
-  schreib(t, x0 + 2, y0 + 1, "Heute: " .. heute .. "   Gesamt: " .. gesamt .. "   (nur Spieler ausserhalb des Teams)",
+  schreib(t, x0 + 2, y0 + 1, "Heute: " .. heute .. "   Gesamt: " .. gesamt .. "   (nur Spieler au\223erhalb des Teams)",
     colors.lightGray, colors.gray, W - 3)
   if fehler then schreib(t, x0 + 2, y0 + 2, fehler, colors.red, colors.gray, W - 3) end
   local sp = { x0 + 2, x0 + 14, x0 + 25 }
@@ -1887,9 +1887,9 @@ function ZEICHNE.besucher(t, x0, y0, W, H)
   schreib(t, sp[1], y, "DATUM", colors.cyan, colors.gray)
   schreib(t, sp[2], y, "UHRZEIT", colors.cyan, colors.gray)
   schreib(t, sp[3], y, "SPIELER", colors.cyan, colors.gray)
-  if mehrere > 1 then schreib(t, spTuer, y, "TUER", colors.cyan, colors.gray) end
+  if mehrere > 1 then schreib(t, spTuer, y, "T\220R", colors.cyan, colors.gray) end
   if #alle == 0 then
-    schreib(t, sp[1], y + 2, "Noch niemand Fremdes ist durch die Tuer gegangen.", colors.lime, colors.gray, W - 3)
+    schreib(t, sp[1], y + 2, "Noch niemand Fremdes ist durch die T\252r gegangen.", colors.lime, colors.gray, W - 3)
     return
   end
   local heuteDatum = alle[1].e.datum
@@ -2121,7 +2121,7 @@ local function empfangen(id, roh, prot)
     elseif q == "tuer" and type(msg.daten) == "table" then
       local key = tostring(msg.schluessel or id)
       local erstes = (tueren[key] == nil)
-      local name = tostring(msg.name or ("Tuer PC" .. id))
+      local name = tostring(msg.name or ("T\252r PC" .. id))
       tueren[key] = { name = name, daten = msg.daten, zeit = os.clock(), id = id }
       local liste = type(msg.daten.eintraege) == "table" and msg.daten.eintraege or {}
       for i = #liste, 1, -1 do
